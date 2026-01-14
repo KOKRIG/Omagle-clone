@@ -54,7 +54,7 @@ export default function Login() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1 className="auth-title">Welcome Back</h1>
+        <h1 className="auth-title">Welcome Back to Olyx</h1>
         <p className="auth-subtitle">Sign in to Olyx.site</p>
 
         {error && <div className="error-message">{error}</div>}

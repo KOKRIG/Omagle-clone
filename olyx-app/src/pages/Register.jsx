@@ -6,18 +6,15 @@ import { hashSHA256, isGmailAddress, isValidPassword } from '../utils/hash'
 
 const COUNTRIES = [
   'United States',
+  'Japan',
+  'Russia',
+  'India',
+  'Australia',
+  'Indonesia',
+  'Thailand',
   'United Kingdom',
   'Europe',
-  'India',
-  'Indonesia',
-  'Japan',
-  'China',
-  'Thailand',
-  'Russia',
-  'Australia',
   'Canada',
-  'Africa',
-  'Greenland',
 ]
 
 export default function Register() {
@@ -132,8 +129,8 @@ export default function Register() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1 className="auth-title">Create Account</h1>
-        <p className="auth-subtitle">Join Olyx.site today</p>
+        <h1 className="auth-title">Create Your Olyx Account</h1>
+        <p className="auth-subtitle">All fields are mandatory</p>
 
         {error && <div className="error-message">{error}</div>}
 

@@ -14,6 +14,7 @@ export default function ForgotPassword() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [userId, setUserId] = useState(null)
+  const [resetToken, setResetToken] = useState('')
 
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -69,6 +70,17 @@ export default function ForgotPassword() {
         throw new Error('Incorrect answer')
       }
 
+      // Create a reset token
+      const { data: token, error: tokenError } = await supabase.rpc(
+        'create_reset_token',
+        { p_user_id: userId }
+      )
+
+      if (tokenError || !token) {
+        throw new Error('Failed to create reset token')
+      }
+
+      setResetToken(token)
       setStep(3)
     } catch (err) {
       setError(err.message || 'Incorrect answer')
@@ -99,21 +111,27 @@ export default function ForgotPassword() {
     setLoading(true)
 
     try {
-      // First sign in with a magic link approach
-      // Since we verified the secret question, we use admin API
-      // For now, we'll use a workaround - user needs to sign in first
+      // Call the Edge Function to reset password
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+      const apiUrl = `${supabaseUrl}/functions/v1/reset-password`
 
-      // Note: In production, you'd use Supabase Admin API via Edge Function
-      // For this implementation, we'll store a reset token and verify on login
-
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword,
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: resetToken,
+          newPassword: newPassword,
+        }),
       })
 
-      if (updateError) {
-        // If user is not logged in, we need them to complete the flow differently
-        // Store the request and guide them
-        throw new Error('Please contact support to complete password reset')
+      const data = await response.json()
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Failed to reset password')
       }
 
       navigate('/login')
