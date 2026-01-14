@@ -3,6 +3,9 @@ import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicRoute from './components/PublicRoute'
 
+import Landing from './pages/Landing'
+import About from './pages/About'
+import Safety from './pages/Safety'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
@@ -19,7 +22,14 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public routes */}
+          {/* Public marketing pages */}
+          <Route path="/" element={<Landing />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/safety" element={<Safety />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+
+          {/* Auth pages */}
           <Route
             path="/login"
             element={
@@ -37,8 +47,6 @@ function App() {
             }
           />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/privacy" element={<Privacy />} />
 
           {/* Protected routes */}
           <Route
@@ -66,9 +74,8 @@ function App() {
             }
           />
 
-          {/* Default redirect */}
-          <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="*" element={<Navigate to="/home" replace />} />
+          {/* 404 redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
