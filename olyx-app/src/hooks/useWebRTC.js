@@ -14,6 +14,7 @@ export function useWebRTC(matchId, userId, isInitiator) {
   const [error, setError] = useState(null)
 
   const peerConnection = useRef(null)
+  const dataChannel = useRef(null)
   const localVideoRef = useRef(null)
   const remoteVideoRef = useRef(null)
   const iceCandidatesQueue = useRef([])
@@ -48,6 +49,17 @@ export function useWebRTC(matchId, userId, isInitiator) {
         pc.addTrack(track, stream)
       })
 
+      // Create data channel (for initiator)
+      if (isInitiator) {
+        const dc = pc.createDataChannel('chat')
+        dataChannel.current = dc
+      } else {
+        // Handle incoming data channel (for receiver)
+        pc.ondatachannel = (event) => {
+          dataChannel.current = event.channel
+        }
+      }
+
       // Handle remote tracks
       pc.ontrack = (event) => {
         const [remoteStream] = event.streams
@@ -79,7 +91,7 @@ export function useWebRTC(matchId, userId, isInitiator) {
       peerConnection.current = pc
       return pc
     },
-    [matchId, userId]
+    [matchId, userId, isInitiator]
   )
 
   // Create and send offer (for initiator)
@@ -190,6 +202,11 @@ export function useWebRTC(matchId, userId, isInitiator) {
       setLocalStream(null)
     }
 
+    if (dataChannel.current) {
+      dataChannel.current.close()
+      dataChannel.current = null
+    }
+
     if (peerConnection.current) {
       peerConnection.current.close()
       peerConnection.current = null
@@ -293,6 +310,7 @@ export function useWebRTC(matchId, userId, isInitiator) {
     remoteStream,
     connectionState,
     error,
+    dataChannel: dataChannel.current,
     localVideoRef,
     remoteVideoRef,
     toggleAudio,

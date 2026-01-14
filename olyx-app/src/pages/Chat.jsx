@@ -32,7 +32,6 @@ export default function Chat() {
 
   const localVideoRef = useRef(null)
   const remoteVideoRef = useRef(null)
-  const dataChannelRef = useRef(null)
   const chatContainerRef = useRef(null)
 
   // Matchmaking
@@ -53,6 +52,7 @@ export default function Chat() {
     localStream,
     remoteStream,
     connectionState,
+    dataChannel,
     toggleAudio,
     toggleVideo,
     closeConnection,
@@ -147,9 +147,34 @@ export default function Chat() {
     setIsVideoEnabled(enabled)
   }
 
+  // Set up data channel message listener
+  useEffect(() => {
+    if (!dataChannel) return
+
+    const handleMessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        if (data.type === 'chat') {
+          setChatMessages((prev) => [
+            ...prev,
+            { id: Date.now(), text: data.text, sender: 'them' },
+          ])
+        }
+      } catch (err) {
+        console.error('Failed to parse message:', err)
+      }
+    }
+
+    dataChannel.addEventListener('message', handleMessage)
+
+    return () => {
+      dataChannel.removeEventListener('message', handleMessage)
+    }
+  }, [dataChannel])
+
   // Text chat (using WebRTC data channel)
   const sendChatMessage = () => {
-    if (!chatMessage.trim() || !dataChannelRef.current) return
+    if (!chatMessage.trim() || !dataChannel) return
 
     const message = {
       type: 'chat',
@@ -157,8 +182,8 @@ export default function Chat() {
       timestamp: Date.now(),
     }
 
-    if (dataChannelRef.current.readyState === 'open') {
-      dataChannelRef.current.send(JSON.stringify(message))
+    if (dataChannel.readyState === 'open') {
+      dataChannel.send(JSON.stringify(message))
 
       setChatMessages((prev) => [
         ...prev,
