@@ -1,12 +1,10 @@
 import { Link } from 'react-router-dom'
-import AnimatedBackground from '../components/AnimatedBackground'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
 export default function Landing() {
   return (
     <div className="public-page">
-      <AnimatedBackground />
       <Header />
 
       <main className="public-content">
