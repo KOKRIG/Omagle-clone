@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 
+const PRO_EMAILS = ['taranjitkokri420@gmail.com', 'studio54code@gmail.com']
+
 export default function Home() {
   const navigate = useNavigate()
   const { user, profile, signOut, setProfile } = useAuth()
@@ -16,20 +18,18 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [activeUsers, setActiveUsers] = useState(0)
   const [showPermissionModal, setShowPermissionModal] = useState(false)
-  const [showFilterPanel, setShowFilterPanel] = useState(false)
+
+  const isPro = profile?.is_paid || PRO_EMAILS.includes(profile?.email?.toLowerCase())
 
   useEffect(() => {
     if (profile) {
-      // Check ban status
       if (profile.ban_until && new Date(profile.ban_until) > new Date()) {
         setIsBanned(true)
         setBanExpiry(profile.ban_until)
       }
 
-      // Check billing status
       checkBillingStatus()
 
-      // Load saved filters
       if (profile.filter_gender) {
         setFilters((prev) => ({ ...prev, gender: profile.filter_gender }))
       }
@@ -37,12 +37,10 @@ export default function Home() {
         setFilters((prev) => ({ ...prev, region: profile.filter_region }))
       }
 
-      // Update presence to online
       supabase.from('profiles').update({ presence: 'online' }).eq('id', user.id)
     }
   }, [profile])
 
-  // Fetch active users count
   useEffect(() => {
     const fetchActiveUsers = async () => {
       const { count } = await supabase
@@ -53,17 +51,17 @@ export default function Home() {
     }
 
     fetchActiveUsers()
-    const interval = setInterval(fetchActiveUsers, 30000) // Update every 30 seconds
+    const interval = setInterval(fetchActiveUsers, 30000)
 
     return () => clearInterval(interval)
   }, [])
 
   const checkBillingStatus = async () => {
+    if (PRO_EMAILS.includes(profile?.email?.toLowerCase())) return
     if (!profile?.is_paid) return
 
     const nextBilling = profile.next_billing
     if (nextBilling && new Date(nextBilling) < new Date()) {
-      // Billing expired - downgrade to free
       const { error } = await supabase
         .from('profiles')
         .update({ is_paid: false })
@@ -76,19 +74,16 @@ export default function Home() {
   }
 
   const handleFilterChange = async (key, value) => {
-    if (!profile?.is_paid) return
+    if (!isPro) return
 
     setFilters((prev) => ({ ...prev, [key]: value }))
 
-    // Save filter preferences
     const update = key === 'gender' ? { filter_gender: value } : { filter_region: value }
     await supabase.from('profiles').update(update).eq('id', user.id)
   }
 
   const handleStartChat = () => {
-    if (isBanned) {
-      return
-    }
+    if (isBanned) return
     setShowPermissionModal(true)
   }
 
@@ -97,22 +92,18 @@ export default function Home() {
     setLoading(true)
 
     try {
-      // Request camera and microphone permissions
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
       })
 
-      // Stop the stream immediately (we just needed permission)
       stream.getTracks().forEach((track) => track.stop())
 
-      // Update presence to searching
       await supabase
         .from('profiles')
         .update({ presence: 'searching' })
         .eq('id', user.id)
 
-      // Navigate to chat page
       navigate('/chat', { state: { filters } })
     } catch (err) {
       alert('Camera and microphone access is required to use Olyx.site')
@@ -132,193 +123,177 @@ export default function Home() {
     navigate('/login')
   }
 
-  const getPlanBadge = () => {
-    if (profile?.is_paid) {
-      return <span className="badge badge-pro">PRO</span>
-    }
-    return <span className="badge badge-free">FREE</span>
-  }
-
-  const getStatusBadge = () => {
-    if (isBanned) {
-      return <span className="badge badge-restricted">RESTRICTED</span>
-    }
-    return null
-  }
-
   return (
-    <div className="home-container">
-      <header className="home-header">
-        <h1 className="logo">Olyx.site</h1>
-        <div className="active-users">Active now: {activeUsers} users</div>
-        <nav className="nav-links">
-          <Link to="/pricing">Pricing</Link>
-          <button onClick={handleLogout} className="btn btn-text">
+    <div className="dashboard">
+      <header className="dashboard-header">
+        <Link to="/" className="dashboard-logo gradient-text">
+          Olyx.site
+        </Link>
+        <div className="dashboard-nav">
+          <div className="active-indicator">
+            <span className="pulse-dot"></span>
+            <span>{activeUsers} online</span>
+          </div>
+          <Link to="/pricing" className="nav-link">Pricing</Link>
+          <button onClick={handleLogout} className="nav-link logout-btn">
             Logout
           </button>
-        </nav>
+        </div>
       </header>
 
-      <main className="home-main">
-        <div className="welcome-section">
-          <h2>Connect with People Worldwide</h2>
-          <p className="privacy-notice">
-            We do not record or store video, audio, or messages. Your privacy is our priority.
-          </p>
-        </div>
+      <main className="dashboard-main">
+        <div className="dashboard-grid">
+          <div className="main-action-card">
+            <div className="card-glow"></div>
+            <div className="card-content">
+              <h1>Ready to Connect?</h1>
+              <p>Meet real people from around the world. No bots, no recordings - just authentic conversations.</p>
 
-        <div className="action-section-top">
-          <button
-            onClick={handleStartChat}
-            className="btn btn-primary btn-hero"
-            disabled={loading}
-          >
-            {loading ? 'Starting...' : 'START CHAT'}
-          </button>
-
-          <button
-            onClick={() => setShowFilterPanel(!showFilterPanel)}
-            className="btn btn-secondary btn-hero"
-          >
-            FILTERS {!profile?.is_paid && '🔒'}
-          </button>
-        </div>
-
-        <div className="profile-card">
-          <h3>Your Profile</h3>
-          <div className="profile-info">
-            <div className="profile-row">
-              <span className="label">Email:</span>
-              <span className="value">{profile?.email}</span>
-            </div>
-            <div className="profile-row">
-              <span className="label">Name:</span>
-              <span className="value">{profile?.full_name}</span>
-            </div>
-            <div className="profile-row">
-              <span className="label">Country:</span>
-              <span className="value">{profile?.country}</span>
-            </div>
-            <div className="profile-row">
-              <span className="label">Plan:</span>
-              <span className="value">{getPlanBadge()}</span>
-            </div>
-            {getStatusBadge() && (
-              <div className="profile-row">
-                <span className="label">Status:</span>
-                <span className="value">{getStatusBadge()}</span>
-              </div>
-            )}
-            {profile?.is_paid && profile?.next_billing && (
-              <div className="profile-row">
-                <span className="label">Next Billing:</span>
-                <span className="value">
-                  {new Date(profile.next_billing).toLocaleDateString()}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {isBanned && (
-          <div className="ban-notice">
-            <h3>Account Restricted</h3>
-            <p>
-              Your account has been restricted due to multiple reports.
-              Restrictions will be lifted on{' '}
-              {new Date(banExpiry).toLocaleDateString()}.
-            </p>
-            <p>While restricted:</p>
-            <ul>
-              <li>Match probability reduced (1 in 10 attempts)</li>
-              <li>Filters disabled</li>
-            </ul>
-          </div>
-        )}
-
-        {showFilterPanel && (
-          <div className="filters-panel">
-            <h3>Chat Filters {!profile?.is_paid && '(PRO only)'}</h3>
-
-            {!profile?.is_paid && (
-              <div className="upgrade-overlay">
-                <p>
-                  <Link to="/pricing">Upgrade to unlock filters</Link>
-                </p>
-              </div>
-            )}
-
-            <div className="filter-group">
-              <label htmlFor="genderFilter">Gender</label>
-              <select
-                id="genderFilter"
-                value={filters.gender}
-                onChange={(e) => handleFilterChange('gender', e.target.value)}
-                disabled={!profile?.is_paid || isBanned}
+              <button
+                onClick={handleStartChat}
+                className="start-chat-btn"
+                disabled={loading || isBanned}
               >
-                <option value="any">Any</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
-            </div>
+                {loading ? (
+                  <span className="btn-loading">Starting...</span>
+                ) : (
+                  <>
+                    <span className="btn-icon">&#9654;</span>
+                    <span>Start Chatting</span>
+                  </>
+                )}
+              </button>
 
-            <div className="filter-group">
-              <label htmlFor="regionFilter">Region</label>
-              <select
-                id="regionFilter"
-                value={filters.region}
-                onChange={(e) => handleFilterChange('region', e.target.value)}
-                disabled={!profile?.is_paid || isBanned}
-              >
-                <option value="">Any Region</option>
-                <option value="United States">United States</option>
-                <option value="Europe">Europe</option>
-                <option value="Asia">Asia</option>
-                <option value="Japan">Japan</option>
-                <option value="Korea">Korea</option>
-                <option value="Other">Other</option>
-              </select>
+              {isBanned && (
+                <div className="restriction-notice">
+                  Account restricted until {new Date(banExpiry).toLocaleDateString()}
+                </div>
+              )}
             </div>
           </div>
-        )}
 
+          <div className="side-cards">
+            <div className="info-card profile-card-new">
+              <div className="card-header">
+                <h3>Your Profile</h3>
+                {isPro ? (
+                  <span className="pro-badge">PRO</span>
+                ) : (
+                  <span className="free-badge">FREE</span>
+                )}
+              </div>
+              <div className="profile-details">
+                <div className="detail-row">
+                  <span className="detail-label">Name</span>
+                  <span className="detail-value">{profile?.full_name || 'Not set'}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Country</span>
+                  <span className="detail-value">{profile?.country || 'Not set'}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Chats</span>
+                  <span className="detail-value">{profile?.match_count || 0}</span>
+                </div>
+              </div>
+              {!isPro && (
+                <Link to="/pricing" className="upgrade-link">
+                  Upgrade to PRO
+                </Link>
+              )}
+            </div>
+
+            <div className="info-card filters-card">
+              <div className="card-header">
+                <h3>Filters</h3>
+                {!isPro && <span className="lock-icon">Locked</span>}
+              </div>
+
+              <div className={`filters-content ${!isPro ? 'filters-locked' : ''}`}>
+                <div className="filter-item">
+                  <label>Gender Preference</label>
+                  <select
+                    value={filters.gender}
+                    onChange={(e) => handleFilterChange('gender', e.target.value)}
+                    disabled={!isPro || isBanned}
+                  >
+                    <option value="any">Any</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                </div>
+
+                <div className="filter-item">
+                  <label>Region</label>
+                  <select
+                    value={filters.region}
+                    onChange={(e) => handleFilterChange('region', e.target.value)}
+                    disabled={!isPro || isBanned}
+                  >
+                    <option value="">Any Region</option>
+                    <option value="United States">United States</option>
+                    <option value="Europe">Europe</option>
+                    <option value="Asia">Asia</option>
+                    <option value="Japan">Japan</option>
+                    <option value="Korea">Korea</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                {!isPro && (
+                  <div className="filters-overlay">
+                    <Link to="/pricing">Unlock with PRO</Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="features-row">
+          <div className="feature-item">
+            <div className="feature-icon">&#128274;</div>
+            <span>End-to-End Private</span>
+          </div>
+          <div className="feature-item">
+            <div className="feature-icon">&#128683;</div>
+            <span>No Recording</span>
+          </div>
+          <div className="feature-item">
+            <div className="feature-icon">&#129302;</div>
+            <span>AI Moderated</span>
+          </div>
+          <div className="feature-item">
+            <div className="feature-icon">&#128100;</div>
+            <span>Real People Only</span>
+          </div>
+        </div>
       </main>
 
-      <footer className="home-footer">
+      <footer className="dashboard-footer">
         <div className="footer-links">
-          <Link to="/terms">Terms of Service</Link>
-          <Link to="/privacy">Privacy Policy</Link>
-          <Link to="/safety">Safety Center</Link>
+          <Link to="/terms">Terms</Link>
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/safety">Safety</Link>
         </div>
-        <p className="footer-note">
-          Olyx.site is a neutral platform that does not support war, violence, or harm against any country or group.
-        </p>
+        <p>We promote peaceful communication worldwide.</p>
       </footer>
 
-      {/* Permission Modal */}
       {showPermissionModal && (
         <div className="modal-overlay">
-          <div className="modal permission-modal">
-            <h3>Camera and Microphone Required</h3>
+          <div className="permission-modal-new">
+            <div className="modal-icon">&#127909;</div>
+            <h3>Camera & Mic Required</h3>
             <p>
-              Camera and microphone access are required to chat on Olyx.site.
+              To chat on Olyx.site, we need access to your camera and microphone.
+              We never record or store any calls.
             </p>
-            <p className="modal-privacy">
-              We do not record audio or video. All calls are peer-to-peer and private.
-            </p>
-
-            <div className="modal-actions">
-              <button
-                onClick={() => setShowPermissionModal(false)}
-                className="btn btn-secondary"
-              >
+            <div className="modal-btns">
+              <button onClick={() => setShowPermissionModal(false)} className="modal-btn-cancel">
                 Cancel
               </button>
-              <button
-                onClick={handlePermissionGranted}
-                className="btn btn-primary"
-              >
-                Allow & Continue
+              <button onClick={handlePermissionGranted} className="modal-btn-allow">
+                Allow & Start
               </button>
             </div>
           </div>
