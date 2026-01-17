@@ -34,15 +34,16 @@
 }
 
 .header-logo {
-  display: flex;
-  align-items: center;
+  font-size: 1.5rem;
+  font-weight: 700;
   text-decoration: none;
 }
 
-.logo-img {
-  height: 40px;
-  width: auto;
-  object-fit: contain;
+.gradient-text {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .header-nav {
@@ -310,10 +311,9 @@
   color: var(--text-primary);
 }
 
-.footer-logo-img {
-  height: 36px;
-  width: auto;
-  object-fit: contain;
+.footer-logo {
+  font-size: 1.5rem;
+  font-weight: 700;
   margin-bottom: 0.5rem;
 }
 

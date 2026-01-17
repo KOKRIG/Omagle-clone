@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
-import logoImg from '../assets/files_5142184-1768654930960-fe0bd809-6bc1-479e-932e-5902ff8d803b.png'
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -8,8 +7,8 @@ export default function Header() {
   return (
     <header className="public-header">
       <div className="header-container">
-        <Link to="/" className="header-logo">
-          <img src={logoImg} alt="Olyx" className="logo-img" />
+        <Link to="/" className="header-logo gradient-text">
+          Olyx.site
         </Link>
 
         <nav className={`header-nav ${mobileMenuOpen ? 'mobile-open' : ''}`}>
