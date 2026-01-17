@@ -34,13 +34,15 @@
 }
 
 .header-logo {
-  font-size: 1.5rem;
-  font-weight: 700;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  display: flex;
+  align-items: center;
   text-decoration: none;
+}
+
+.logo-img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 .header-nav {
@@ -308,13 +310,11 @@
   color: var(--text-primary);
 }
 
-.footer-logo {
-  font-size: 1.5rem;
-  font-weight: 700;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.footer-logo-img {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+  margin-bottom: 0.5rem;
 }
 
 .footer-tagline {

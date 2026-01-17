@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import logoImg from '../assets/files_5142184-1768654930960-fe0bd809-6bc1-479e-932e-5902ff8d803b.png'
 
 export default function Footer() {
   return (
@@ -6,7 +7,7 @@ export default function Footer() {
       <div className="footer-container">
         <div className="footer-content">
           <div className="footer-section">
-            <h3 className="footer-logo">Olyx.site</h3>
+            <img src={logoImg} alt="Olyx" className="footer-logo-img" />
             <p className="footer-tagline">
               Real people. No bots. No recordings.
               <br />
