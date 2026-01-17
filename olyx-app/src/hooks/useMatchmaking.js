@@ -76,9 +76,18 @@ export function useMatchmaking(userId, profile, filters) {
 
       // Filter candidates based on compatibility
       const compatibleMatches = candidates.filter((candidate) => {
-        // Free plan: same-gender matching only
+        // Free plan: 6 same-gender matches, then 1 opposite-gender match (rotating pattern)
         if (!isPaid) {
-          if (candidate.gender !== profile.gender) return false
+          const matchCount = profile.match_count || 0
+          const shouldMatchOpposite = matchCount % 7 === 6 // Every 7th match is opposite gender
+
+          if (shouldMatchOpposite) {
+            // Match opposite gender on 7th match
+            if (candidate.gender === profile.gender) return false
+          } else {
+            // Match same gender for first 6 matches
+            if (candidate.gender !== profile.gender) return false
+          }
         }
 
         // Paid plan with filters
@@ -145,11 +154,19 @@ export function useMatchmaking(userId, profile, filters) {
 
       if (matchError) throw matchError
 
-      // Update both users' presence
+      // Update both users' presence and increment match count
       await supabase
         .from('profiles')
         .update({ presence: 'in_chat' })
         .in('id', [userId, matchedUserId])
+
+      // Increment match count for both users (for free plan gender ratio tracking)
+      await supabase.rpc('increment_match_count', {
+        user_id_param: userId
+      })
+      await supabase.rpc('increment_match_count', {
+        user_id_param: matchedUserId
+      })
 
       return match
     } catch (err) {

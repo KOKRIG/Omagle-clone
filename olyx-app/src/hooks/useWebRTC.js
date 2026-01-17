@@ -18,17 +18,22 @@ export function useWebRTC(matchId, userId, isInitiator) {
   const localVideoRef = useRef(null)
   const remoteVideoRef = useRef(null)
   const iceCandidatesQueue = useRef([])
+  const qualityMonitorInterval = useRef(null)
 
-  // Initialize media stream
+  // Initialize media stream with quality constraints
   const initializeMedia = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
+          width: { min: 480, ideal: 1280, max: 1920 },
+          height: { min: 360, ideal: 720, max: 1080 },
           facingMode: 'user',
         },
-        audio: true,
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
       })
 
       setLocalStream(stream)
@@ -190,10 +195,13 @@ export function useWebRTC(matchId, userId, isInitiator) {
       if (isInitiator) {
         await createOffer()
       }
+
+      // Start quality monitoring
+      monitorConnectionQuality()
     } catch (err) {
       setError(err.message)
     }
-  }, [initializeMedia, createPeerConnection, createOffer, isInitiator])
+  }, [initializeMedia, createPeerConnection, createOffer, isInitiator, monitorConnectionQuality])
 
   // Close connection
   const closeConnection = useCallback(() => {
@@ -210,6 +218,11 @@ export function useWebRTC(matchId, userId, isInitiator) {
     if (peerConnection.current) {
       peerConnection.current.close()
       peerConnection.current = null
+    }
+
+    if (qualityMonitorInterval.current) {
+      clearInterval(qualityMonitorInterval.current)
+      qualityMonitorInterval.current = null
     }
 
     setRemoteStream(null)
@@ -239,6 +252,61 @@ export function useWebRTC(matchId, userId, isInitiator) {
     }
     return false
   }, [localStream])
+
+  // Monitor connection quality and adjust bitrate
+  const monitorConnectionQuality = useCallback(() => {
+    if (!peerConnection.current) return
+
+    const pc = peerConnection.current
+
+    qualityMonitorInterval.current = setInterval(async () => {
+      try {
+        const stats = await pc.getStats()
+        let bytesReceived = 0
+        let packetsLost = 0
+        let packetsReceived = 0
+
+        stats.forEach((report) => {
+          if (report.type === 'inbound-rtp' && report.kind === 'video') {
+            bytesReceived = report.bytesReceived || 0
+            packetsLost = report.packetsLost || 0
+            packetsReceived = report.packetsReceived || 0
+          }
+        })
+
+        // Calculate packet loss percentage
+        const totalPackets = packetsLost + packetsReceived
+        const lossPercentage = totalPackets > 0 ? (packetsLost / totalPackets) * 100 : 0
+
+        // Adjust bitrate based on packet loss
+        const senders = pc.getSenders()
+        const videoSender = senders.find((s) => s.track?.kind === 'video')
+
+        if (videoSender) {
+          const parameters = videoSender.getParameters()
+          if (!parameters.encodings) {
+            parameters.encodings = [{}]
+          }
+
+          // Adjust bitrate: high loss = lower bitrate, low loss = higher bitrate
+          if (lossPercentage > 5) {
+            // High packet loss - reduce to 480p equivalent
+            parameters.encodings[0].maxBitrate = 500000 // 500 kbps
+          } else if (lossPercentage > 2) {
+            // Moderate packet loss - 720p equivalent
+            parameters.encodings[0].maxBitrate = 1200000 // 1.2 Mbps
+          } else {
+            // Good connection - allow up to 1080p equivalent
+            parameters.encodings[0].maxBitrate = 2500000 // 2.5 Mbps
+          }
+
+          await videoSender.setParameters(parameters)
+        }
+      } catch (err) {
+        console.error('Quality monitoring error:', err)
+      }
+    }, 5000) // Check every 5 seconds
+  }, [])
 
   // Listen for signaling data
   useEffect(() => {

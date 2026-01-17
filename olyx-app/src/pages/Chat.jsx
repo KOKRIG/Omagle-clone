@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useMatchmaking } from '../hooks/useMatchmaking'
 import { useWebRTC } from '../hooks/useWebRTC'
 import { useNSFWDetection } from '../hooks/useNSFWDetection'
+import { useAntiBotDetection } from '../hooks/useAntiBotDetection'
 import { supabase } from '../lib/supabase'
 
 const REPORT_REASONS = [
@@ -58,7 +59,7 @@ export default function Chat() {
     closeConnection,
   } = useWebRTC(matchId, user?.id, isInitiator)
 
-  // NSFW Detection
+  // Violation handler for both NSFW and anti-bot
   const handleViolation = useCallback(
     async (type, message, details) => {
       console.warn('Violation detected:', type, message, details)
@@ -71,15 +72,25 @@ export default function Chat() {
         if (matchedUser) {
           await submitReport('inappropriate')
         }
+      } else if (type === 'bot_detected') {
+        // Disconnect and report bot
+        await handleDisconnect()
+        if (matchedUser) {
+          await submitReport('spam')
+        }
       }
     },
     [matchedUser]
   )
 
+  // NSFW Detection
   const { startMonitoring, stopMonitoring } = useNSFWDetection(
     remoteVideoRef.current,
     handleViolation
   )
+
+  // Anti-bot Detection
+  const { isBot, detectAutomationPattern } = useAntiBotDetection(handleViolation)
 
   // Assign streams to video elements
   useEffect(() => {
@@ -234,6 +245,10 @@ export default function Chat() {
 
   return (
     <div className="chat-container">
+      <div className="chat-safety-notice">
+        We do not record or store video, audio, or messages. All connections are private and peer-to-peer.
+      </div>
+
       <div className="chat-main">
         <div className="video-grid">
           <div className="video-wrapper remote-video">
