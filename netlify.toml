@@ -1,12 +1,12 @@
 [build]
-  base = "olyx-app"
-  command = "npm run build"
-  publish = "olyx-app/dist"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+base = "olyx-app"
+command = "npm run build"
+publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "18"
+NODE_VERSION = "18"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
