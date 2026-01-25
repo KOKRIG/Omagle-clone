@@ -4,6 +4,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import BannerAd from '../components/BannerAd'
 import VerticalBannerAd from '../components/VerticalBannerAd'
+import NativeAd from '../components/NativeAd'
 
 export default function Landing() {
   useEffect(() => {
@@ -23,22 +24,24 @@ export default function Landing() {
       <Header />
 
       <main className="public-content">
-        {/* Horizontal Banner Ad at Top */}
-        <section style={{ padding: '2rem 0', display: 'flex', justifyContent: 'center', background: 'rgba(14, 165, 233, 0.05)' }}>
+        {/* Top Horizontal Banner Ad */}
+        <section style={{ padding: '1rem 0', display: 'flex', justifyContent: 'center', background: 'rgba(14, 165, 233, 0.05)' }}>
           <BannerAd />
         </section>
 
         {/* Main Content with Side Ads */}
-        <div style={{ display: 'flex', gap: '1rem', maxWidth: '1400px', margin: '0 auto', padding: '0 1rem' }}>
-          {/* Left Vertical Ad */}
-          <div style={{ flex: '0 0 160px', display: 'flex', justifyContent: 'center', paddingTop: '2rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '1600px', margin: '0 auto', padding: '0 0.5rem' }}>
+          {/* Left Side - Native Ad */}
+          <div style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', gap: '1rem', paddingTop: '1rem' }}>
+            <NativeAd />
             <VerticalBannerAd />
+            <NativeAd />
           </div>
 
           {/* Center Content */}
           <div style={{ flex: '1', minWidth: 0 }}>
             {/* Hero Section */}
-            <section className="hero">
+            <section className="hero" style={{ padding: '2rem 0' }}>
               <div className="container hero-container">
                 <h1 className="hero-title fade-in">
                   Free Random Video Chat
@@ -59,6 +62,11 @@ export default function Landing() {
                   </Link>
                 </div>
               </div>
+            </section>
+
+            {/* Mid Banner */}
+            <section style={{ padding: '1rem 0', display: 'flex', justifyContent: 'center' }}>
+              <BannerAd />
             </section>
 
             {/* Trust Signals */}
@@ -87,6 +95,11 @@ export default function Landing() {
                   </div>
                 </div>
               </div>
+            </section>
+
+            {/* Native Ad in content */}
+            <section style={{ padding: '1rem 0', display: 'flex', justifyContent: 'center' }}>
+              <NativeAd />
             </section>
 
             {/* Features Section */}
@@ -146,6 +159,11 @@ export default function Landing() {
               </div>
             </section>
 
+            {/* Banner between sections */}
+            <section style={{ padding: '1rem 0', display: 'flex', justifyContent: 'center' }}>
+              <BannerAd />
+            </section>
+
             {/* Safety Section */}
             <section className="safety-highlight">
               <div className="container">
@@ -178,6 +196,11 @@ export default function Landing() {
                   </Link>
                 </div>
               </div>
+            </section>
+
+            {/* Native Ad */}
+            <section style={{ padding: '1rem 0', display: 'flex', justifyContent: 'center' }}>
+              <NativeAd />
             </section>
 
             {/* Final CTA */}
@@ -215,11 +238,18 @@ export default function Landing() {
             </section>
           </div>
 
-          {/* Right Vertical Ad */}
-          <div style={{ flex: '0 0 160px', display: 'flex', justifyContent: 'center', paddingTop: '2rem' }}>
+          {/* Right Side - Native Ad */}
+          <div style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', gap: '1rem', paddingTop: '1rem' }}>
+            <NativeAd />
             <VerticalBannerAd />
+            <NativeAd />
           </div>
         </div>
+
+        {/* Bottom Horizontal Banner Ad */}
+        <section style={{ padding: '1rem 0', display: 'flex', justifyContent: 'center', background: 'rgba(14, 165, 233, 0.05)' }}>
+          <BannerAd />
+        </section>
       </main>
 
       <Footer />

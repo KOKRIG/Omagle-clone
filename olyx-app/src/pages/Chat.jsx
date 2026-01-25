@@ -8,6 +8,7 @@ import { useAntiBotDetection } from '../hooks/useAntiBotDetection'
 import { supabase } from '../lib/supabase'
 import BannerAd from '../components/BannerAd'
 import VerticalBannerAd from '../components/VerticalBannerAd'
+import NativeAd from '../components/NativeAd'
 
 const REPORT_REASONS = [
   { value: 'inappropriate', label: 'Inappropriate behavior' },
@@ -264,20 +265,29 @@ export default function Chat() {
   }, [])
 
   return (
-    <div style={{ display: 'flex', gap: '1rem', maxWidth: '1600px', margin: '0 auto' }}>
-      {/* Left Vertical Ad */}
+    <div>
+      {/* Top Banner */}
       {shouldShowAds && (
-        <div style={{ flex: '0 0 160px', display: 'flex', justifyContent: 'center', paddingTop: '1rem' }}>
-          <VerticalBannerAd />
+        <div style={{ padding: '0.5rem', display: 'flex', justifyContent: 'center', background: 'rgba(14, 165, 233, 0.05)' }}>
+          <BannerAd />
         </div>
       )}
 
-      <div className="chat-container" style={{ flex: '1', minWidth: 0 }}>
-        <div className="chat-safety-notice">
-          We do not record or store video, audio, or messages. All connections are private and peer-to-peer.
-        </div>
+      <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '1600px', margin: '0 auto' }}>
+        {/* Left Side Ads */}
+        {shouldShowAds && (
+          <div style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingTop: '0.5rem' }}>
+            <NativeAd />
+            <VerticalBannerAd />
+          </div>
+        )}
 
-        {shouldShowAds && <BannerAd />}
+        <div className="chat-container" style={{ flex: '1', minWidth: 0 }}>
+          <div className="chat-safety-notice">
+            We do not record or store video, audio, or messages. All connections are private and peer-to-peer.
+          </div>
+
+          {shouldShowAds && <BannerAd />}
 
         <div className="chat-main">
         <div className="video-grid">
@@ -467,12 +477,21 @@ export default function Chat() {
           </div>
         </div>
       )}
+        </div>
+
+        {/* Right Side Ads */}
+        {shouldShowAds && (
+          <div style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', gap: '0.5rem', paddingTop: '0.5rem' }}>
+            <NativeAd />
+            <VerticalBannerAd />
+          </div>
+        )}
       </div>
 
-      {/* Right Vertical Ad */}
+      {/* Bottom Banner */}
       {shouldShowAds && (
-        <div style={{ flex: '0 0 160px', display: 'flex', justifyContent: 'center', paddingTop: '1rem' }}>
-          <VerticalBannerAd />
+        <div style={{ padding: '0.5rem', display: 'flex', justifyContent: 'center', background: 'rgba(14, 165, 233, 0.05)' }}>
+          <BannerAd />
         </div>
       )}
     </div>

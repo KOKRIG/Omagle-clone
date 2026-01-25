@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import AdViewer from '../components/AdViewer'
 import BannerAd from '../components/BannerAd'
 import VerticalBannerAd from '../components/VerticalBannerAd'
+import NativeAd from '../components/NativeAd'
 
 const PRO_EMAILS = ['taranjitkokri420@gmail.com', 'studio54code@gmail.com']
 
@@ -213,10 +214,17 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="dashboard-main" style={{ display: 'flex', gap: '1rem', maxWidth: '1400px', margin: '0 auto', padding: '1rem' }}>
-        {/* Left Vertical Ad */}
-        <div style={{ flex: '0 0 160px', display: 'flex', justifyContent: 'center' }}>
+      {/* Top Banner */}
+      <div style={{ padding: '0.5rem', display: 'flex', justifyContent: 'center', background: 'rgba(14, 165, 233, 0.05)' }}>
+        <BannerAd />
+      </div>
+
+      <main className="dashboard-main" style={{ display: 'flex', gap: '0.5rem', maxWidth: '1600px', margin: '0 auto', padding: '0.5rem' }}>
+        {/* Left Side Ads */}
+        <div style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <NativeAd />
           <VerticalBannerAd />
+          <NativeAd />
         </div>
 
         {/* Main Content */}
@@ -358,13 +366,25 @@ export default function Home() {
               <span>Real People Only</span>
             </div>
           </div>
+
+          {/* Bottom Banner in content */}
+          <div style={{ padding: '0.5rem 0', display: 'flex', justifyContent: 'center' }}>
+            <BannerAd />
+          </div>
         </div>
 
-        {/* Right Vertical Ad */}
-        <div style={{ flex: '0 0 160px', display: 'flex', justifyContent: 'center' }}>
+        {/* Right Side Ads */}
+        <div style={{ flex: '0 0 300px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <NativeAd />
           <VerticalBannerAd />
+          <NativeAd />
         </div>
       </main>
+
+      {/* Bottom Banner */}
+      <div style={{ padding: '0.5rem', display: 'flex', justifyContent: 'center', background: 'rgba(14, 165, 233, 0.05)' }}>
+        <BannerAd />
+      </div>
 
       <footer className="dashboard-footer">
         <div className="footer-links">
