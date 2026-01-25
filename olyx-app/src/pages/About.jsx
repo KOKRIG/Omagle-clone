@@ -2,12 +2,15 @@ import { Link } from 'react-router-dom'
 import AnimatedBackground from '../components/AnimatedBackground'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
+import BannerAd from '../components/BannerAd'
 
 export default function About() {
   return (
     <div className="public-page">
       <AnimatedBackground />
       <Header />
+
+      <BannerAd />
 
       <main className="public-content">
         <div className="content-page">
