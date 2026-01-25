@@ -6,6 +6,8 @@ export function useMatchmaking(userId, profile, filters) {
   const [matchedUser, setMatchedUser] = useState(null)
   const [matchId, setMatchId] = useState(null)
   const [error, setError] = useState(null)
+  const [onlineCount, setOnlineCount] = useState(0)
+  const [searchDuration, setSearchDuration] = useState(0)
 
   const isBanned = profile?.ban_until && new Date(profile.ban_until) > new Date()
   const hasAdPremium = profile?.ad_premium_expires_at && new Date(profile.ad_premium_expires_at) > new Date()
@@ -27,6 +29,13 @@ export function useMatchmaking(userId, profile, filters) {
       if (queueError) throw queueError
 
       setMatchStatus('searching')
+      setSearchDuration(0)
+
+      const { count } = await supabase
+        .from('match_queue')
+        .select('*', { count: 'exact', head: true })
+
+      setOnlineCount(count || 0)
     } catch (err) {
       setError(err.message)
       setMatchStatus('failed')
@@ -202,9 +211,22 @@ export function useMatchmaking(userId, profile, filters) {
           setMatchStatus('found')
         }
       }
+
+      const { count } = await supabase
+        .from('match_queue')
+        .select('*', { count: 'exact', head: true })
+
+      setOnlineCount(count || 0)
     }, 2000)
 
-    return () => clearInterval(searchInterval)
+    const durationInterval = setInterval(() => {
+      setSearchDuration((prev) => prev + 1)
+    }, 1000)
+
+    return () => {
+      clearInterval(searchInterval)
+      clearInterval(durationInterval)
+    }
   }, [matchStatus, findMatch, createMatch])
 
   useEffect(() => {
@@ -250,6 +272,8 @@ export function useMatchmaking(userId, profile, filters) {
     matchedUser,
     matchId,
     error,
+    onlineCount,
+    searchDuration,
     joinQueue,
     leaveQueue,
     endMatch,

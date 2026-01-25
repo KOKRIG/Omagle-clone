@@ -6,6 +6,7 @@ import { useWebRTC } from '../hooks/useWebRTC'
 import { useNSFWDetection } from '../hooks/useNSFWDetection'
 import { useAntiBotDetection } from '../hooks/useAntiBotDetection'
 import { supabase } from '../lib/supabase'
+import BannerAd from '../components/BannerAd'
 
 const REPORT_REASONS = [
   { value: 'inappropriate', label: 'Inappropriate behavior' },
@@ -40,6 +41,8 @@ export default function Chat() {
     matchStatus,
     matchedUser,
     matchId,
+    onlineCount,
+    searchDuration,
     joinQueue,
     leaveQueue,
     endMatch,
@@ -243,19 +246,36 @@ export default function Chat() {
     }
   }
 
+  const hasAdPremium = profile?.ad_premium_expires_at && new Date(profile.ad_premium_expires_at) > new Date()
+  const isPaid = profile?.is_paid || hasAdPremium
+  const shouldShowAds = !isPaid
+
   return (
     <div className="chat-container">
       <div className="chat-safety-notice">
         We do not record or store video, audio, or messages. All connections are private and peer-to-peer.
       </div>
 
+      {shouldShowAds && <BannerAd />}
+
       <div className="chat-main">
         <div className="video-grid">
           <div className="video-wrapper remote-video">
             {matchStatus === 'searching' && (
               <div className="video-placeholder">
-                <div className="loading-spinner"></div>
-                <p>Finding a match...</p>
+                <div className="loading-spinner-circle"></div>
+                {searchDuration < 10 ? (
+                  <>
+                    <p>Finding a match...</p>
+                    <p className="online-count">{onlineCount} users online</p>
+                  </>
+                ) : (
+                  <>
+                    <p>Sorry, no users are active right now</p>
+                    <p className="online-count">Keep waiting or try again later</p>
+                    <p className="small-text">{onlineCount} users in queue</p>
+                  </>
+                )}
               </div>
             )}
 
@@ -270,6 +290,7 @@ export default function Chat() {
 
             {matchStatus === 'found' && connectionState !== 'connected' && (
               <div className="connection-overlay">
+                <div className="loading-spinner-circle"></div>
                 <p>Connecting...</p>
               </div>
             )}
