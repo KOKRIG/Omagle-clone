@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import AdViewer from '../components/AdViewer'
 import BannerAd from '../components/BannerAd'
-import NativeAd from '../components/NativeAd'
+import VerticalBannerAd from '../components/VerticalBannerAd'
 
 const PRO_EMAILS = ['taranjitkokri420@gmail.com', 'studio54code@gmail.com']
 
@@ -183,6 +183,18 @@ export default function Home() {
     setShowPermissionModal(true)
   }
 
+  useEffect(() => {
+    const popunderScript = document.createElement('script')
+    popunderScript.src = 'https://pl28564266.effectivegatecpm.com/e8/a8/8e/e8a88ef3b2c76db8a7ce2199d6df5941.js'
+    document.head.appendChild(popunderScript)
+
+    return () => {
+      if (popunderScript.parentNode) {
+        popunderScript.parentNode.removeChild(popunderScript)
+      }
+    }
+  }, [])
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
@@ -201,8 +213,15 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="dashboard-main">
-        <BannerAd />
+      <main className="dashboard-main" style={{ display: 'flex', gap: '1rem', maxWidth: '1400px', margin: '0 auto', padding: '1rem' }}>
+        {/* Left Vertical Ad */}
+        <div style={{ flex: '0 0 160px', display: 'flex', justifyContent: 'center' }}>
+          <VerticalBannerAd />
+        </div>
+
+        {/* Main Content */}
+        <div style={{ flex: '1', minWidth: 0 }}>
+          <BannerAd />
 
         <div className="dashboard-grid">
           <div className="main-action-card">
@@ -319,27 +338,31 @@ export default function Home() {
               </div>
             </div>
           </div>
+          </div>
+
+          <div className="features-row">
+            <div className="feature-item">
+              <div className="feature-icon">&#128274;</div>
+              <span>End-to-End Private</span>
+            </div>
+            <div className="feature-item">
+              <div className="feature-icon">&#128683;</div>
+              <span>No Recording</span>
+            </div>
+            <div className="feature-item">
+              <div className="feature-icon">&#129302;</div>
+              <span>AI Moderated</span>
+            </div>
+            <div className="feature-item">
+              <div className="feature-icon">&#128100;</div>
+              <span>Real People Only</span>
+            </div>
+          </div>
         </div>
 
-        <NativeAd />
-
-        <div className="features-row">
-          <div className="feature-item">
-            <div className="feature-icon">&#128274;</div>
-            <span>End-to-End Private</span>
-          </div>
-          <div className="feature-item">
-            <div className="feature-icon">&#128683;</div>
-            <span>No Recording</span>
-          </div>
-          <div className="feature-item">
-            <div className="feature-icon">&#129302;</div>
-            <span>AI Moderated</span>
-          </div>
-          <div className="feature-item">
-            <div className="feature-icon">&#128100;</div>
-            <span>Real People Only</span>
-          </div>
+        {/* Right Vertical Ad */}
+        <div style={{ flex: '0 0 160px', display: 'flex', justifyContent: 'center' }}>
+          <VerticalBannerAd />
         </div>
       </main>
 

@@ -7,6 +7,7 @@ import { useNSFWDetection } from '../hooks/useNSFWDetection'
 import { useAntiBotDetection } from '../hooks/useAntiBotDetection'
 import { supabase } from '../lib/supabase'
 import BannerAd from '../components/BannerAd'
+import VerticalBannerAd from '../components/VerticalBannerAd'
 
 const REPORT_REASONS = [
   { value: 'inappropriate', label: 'Inappropriate behavior' },
@@ -250,15 +251,35 @@ export default function Chat() {
   const isPaid = profile?.is_paid || hasAdPremium
   const shouldShowAds = !isPaid
 
+  useEffect(() => {
+    const popunderScript = document.createElement('script')
+    popunderScript.src = 'https://pl28564266.effectivegatecpm.com/e8/a8/8e/e8a88ef3b2c76db8a7ce2199d6df5941.js'
+    document.head.appendChild(popunderScript)
+
+    return () => {
+      if (popunderScript.parentNode) {
+        popunderScript.parentNode.removeChild(popunderScript)
+      }
+    }
+  }, [])
+
   return (
-    <div className="chat-container">
-      <div className="chat-safety-notice">
-        We do not record or store video, audio, or messages. All connections are private and peer-to-peer.
-      </div>
+    <div style={{ display: 'flex', gap: '1rem', maxWidth: '1600px', margin: '0 auto' }}>
+      {/* Left Vertical Ad */}
+      {shouldShowAds && (
+        <div style={{ flex: '0 0 160px', display: 'flex', justifyContent: 'center', paddingTop: '1rem' }}>
+          <VerticalBannerAd />
+        </div>
+      )}
 
-      {shouldShowAds && <BannerAd />}
+      <div className="chat-container" style={{ flex: '1', minWidth: 0 }}>
+        <div className="chat-safety-notice">
+          We do not record or store video, audio, or messages. All connections are private and peer-to-peer.
+        </div>
 
-      <div className="chat-main">
+        {shouldShowAds && <BannerAd />}
+
+        <div className="chat-main">
         <div className="video-grid">
           <div className="video-wrapper remote-video">
             {matchStatus === 'searching' && (
@@ -444,6 +465,14 @@ export default function Chat() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      </div>
+
+      {/* Right Vertical Ad */}
+      {shouldShowAds && (
+        <div style={{ flex: '0 0 160px', display: 'flex', justifyContent: 'center', paddingTop: '1rem' }}>
+          <VerticalBannerAd />
         </div>
       )}
     </div>

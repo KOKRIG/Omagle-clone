@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
 export default function AdViewer({ onComplete, onClose }) {
   const [currentAd, setCurrentAd] = useState(1)
   const [timeRemaining, setTimeRemaining] = useState(5)
-  const [showAdBlockerWarning, setShowAdBlockerWarning] = useState(false)
+  const adContainerRef = useRef(null)
 
   useEffect(() => {
-    openPopupAd()
+    loadAd()
   }, [currentAd])
 
   useEffect(() => {
@@ -19,20 +19,28 @@ export default function AdViewer({ onComplete, onClose }) {
     }
   }, [timeRemaining])
 
-  const openPopupAd = () => {
-    try {
-      const popup = window.open(
-        'https://olyx.site',
-        `popup_ad_${currentAd}`,
-        'width=800,height=600,scrollbars=yes,resizable=yes'
-      )
+  const loadAd = () => {
+    if (!adContainerRef.current) return
 
-      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-        setShowAdBlockerWarning(true)
-      }
-    } catch (e) {
-      setShowAdBlockerWarning(true)
-    }
+    adContainerRef.current.innerHTML = ''
+
+    const script1 = document.createElement('script')
+    script1.innerHTML = `
+      atOptions = {
+        'key' : 'afba01175d1eb6806dc2f07172fc94a6',
+        'format' : 'iframe',
+        'height' : 600,
+        'width' : 160,
+        'params' : {}
+      };
+    `
+
+    const script2 = document.createElement('script')
+    script2.src = 'https://www.highperformanceformat.com/afba01175d1eb6806dc2f07172fc94a6/invoke.js'
+    script2.async = true
+
+    adContainerRef.current.appendChild(script1)
+    adContainerRef.current.appendChild(script2)
   }
 
   const handleNextAd = () => {
@@ -81,32 +89,21 @@ export default function AdViewer({ onComplete, onClose }) {
         </div>
 
         <div className="ad-content-wrapper">
-          {showAdBlockerWarning ? (
-            <div className="ad-blocker-warning">
-              <div className="warning-icon">⚠️</div>
-              <h3>Ad Blocker Detected</h3>
-              <p>Please disable your ad blocker to continue.</p>
-              <p className="warning-subtitle">
-                This feature is supported by ads. Disabling your ad blocker allows us to provide free premium access.
-              </p>
-              <button onClick={onClose} className="warning-btn">
-                Go Back
-              </button>
+          <div className="ad-content">
+            <div className="ad-icon">📺</div>
+            <h3>Advertisement {currentAd}</h3>
+            <p className="ad-subtitle">
+              Please wait {timeRemaining > 0 ? `${timeRemaining} seconds` : 'to continue'}.
+            </p>
+            <div className="ad-display-box">
+              <div ref={adContainerRef} style={{ display: 'flex', justifyContent: 'center', minHeight: '600px', padding: '1rem' }}></div>
             </div>
-          ) : (
-            <div className="ad-content">
-              <div className="ad-icon">📺</div>
-              <h3>Advertisement {currentAd}</h3>
-              <p className="ad-subtitle">
-                A popup window has opened. Please wait {timeRemaining > 0 ? `${timeRemaining} seconds` : 'and close it'} before continuing.
-              </p>
-              <div className="ad-info-box">
-                <p>✓ Popup ad opened automatically</p>
-                <p>✓ Wait for the timer to complete</p>
-                <p>✓ Then click "Next Ad" to continue</p>
-              </div>
+            <div className="ad-info-box">
+              <p>✓ View the ad above</p>
+              <p>✓ Wait for the timer to complete</p>
+              <p>✓ Then click "Next Ad" to continue</p>
             </div>
-          )}
+          </div>
         </div>
 
         <div className="ad-viewer-footer">

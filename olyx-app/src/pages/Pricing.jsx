@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import AdViewer from '../components/AdViewer'
 import BannerAd from '../components/BannerAd'
-import NativeAd from '../components/NativeAd'
+import VerticalBannerAd from '../components/VerticalBannerAd'
 
 export default function Pricing() {
   const navigate = useNavigate()
@@ -76,30 +76,57 @@ export default function Pricing() {
     }
   }
 
+  useEffect(() => {
+    const popunderScript = document.createElement('script')
+    popunderScript.src = 'https://pl28564266.effectivegatecpm.com/e8/a8/8e/e8a88ef3b2c76db8a7ce2199d6df5941.js'
+    document.head.appendChild(popunderScript)
+
+    return () => {
+      if (popunderScript.parentNode) {
+        popunderScript.parentNode.removeChild(popunderScript)
+      }
+    }
+  }, [])
+
   if (success) {
     return (
-      <div className="pricing-container">
-        <BannerAd />
-        <div className="success-card">
-          <div className="success-icon">✓</div>
-          <h2>Welcome to PRO!</h2>
-          <p>Your account has been upgraded successfully.</p>
-          <ul className="success-features">
-            <li>Gender filter unlocked</li>
-            <li>Region filter unlocked</li>
-            <li>Priority matchmaking enabled</li>
-            <li>Ad-free experience</li>
-          </ul>
-          <Link to="/home" className="btn btn-primary">
-            Start Chatting
-          </Link>
+      <div style={{ display: 'flex', gap: '1rem', maxWidth: '1400px', margin: '0 auto', padding: '1rem' }}>
+        <div style={{ flex: '0 0 160px', display: 'flex', justifyContent: 'center' }}>
+          <VerticalBannerAd />
+        </div>
+
+        <div className="pricing-container" style={{ flex: '1', minWidth: 0 }}>
+          <BannerAd />
+          <div className="success-card">
+            <div className="success-icon">✓</div>
+            <h2>Welcome to PRO!</h2>
+            <p>Your account has been upgraded successfully.</p>
+            <ul className="success-features">
+              <li>Gender filter unlocked</li>
+              <li>Region filter unlocked</li>
+              <li>Priority matchmaking enabled</li>
+              <li>Ad-free experience</li>
+            </ul>
+            <Link to="/home" className="btn btn-primary">
+              Start Chatting
+            </Link>
+          </div>
+        </div>
+
+        <div style={{ flex: '0 0 160px', display: 'flex', justifyContent: 'center' }}>
+          <VerticalBannerAd />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="pricing-container">
+    <div style={{ display: 'flex', gap: '1rem', maxWidth: '1400px', margin: '0 auto', padding: '1rem' }}>
+      <div style={{ flex: '0 0 160px', display: 'flex', justifyContent: 'center' }}>
+        <VerticalBannerAd />
+      </div>
+
+      <div className="pricing-container" style={{ flex: '1', minWidth: 0 }}>
       <header className="pricing-header">
         <Link to="/home" className="back-link">
           ← Back to Home
@@ -158,11 +185,9 @@ export default function Pricing() {
             Watch 4 Ads Now
           </button>
         </div>
-      </div>
+        </div>
 
-      <NativeAd />
-
-      <div className="pricing-faq">
+        <div className="pricing-faq">
         <h3>Frequently Asked Questions</h3>
 
         <div className="faq-item">
@@ -206,15 +231,20 @@ export default function Pricing() {
         </div>
       </div>
 
-      <footer className="pricing-footer">
-        <p>
-          Questions? <Link to="/contact">Contact us</Link>
-        </p>
-      </footer>
+        <footer className="pricing-footer">
+          <p>
+            Questions? <Link to="/contact">Contact us</Link>
+          </p>
+        </footer>
 
-      {showAdViewer && (
-        <AdViewer onComplete={handleAdComplete} onClose={() => setShowAdViewer(false)} />
-      )}
+        {showAdViewer && (
+          <AdViewer onComplete={handleAdComplete} onClose={() => setShowAdViewer(false)} />
+        )}
+      </div>
+
+      <div style={{ flex: '0 0 160px', display: 'flex', justifyContent: 'center' }}>
+        <VerticalBannerAd />
+      </div>
     </div>
   )
 }
