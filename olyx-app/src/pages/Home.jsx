@@ -121,12 +121,12 @@ export default function Home() {
 
   const handleStartChat = () => {
     if (isBanned) return
-    setShowAdViewer(true)
+    window.open('about:blank', '_blank')
+    setShowPermissionModal(true)
   }
 
   const handleAdViewerClose = () => {
     setShowAdViewer(false)
-    setShowPermissionModal(true)
   }
 
   const handlePermissionGranted = async () => {
@@ -170,18 +170,17 @@ export default function Home() {
   }
 
   const handleAdComplete = async () => {
+    setShowAdViewer(false)
+
     const { data } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     if (data) {
       setProfile(data)
     }
-
-    setShowAdViewer(false)
-    setShowPermissionModal(true)
   }
 
   useEffect(() => {
