@@ -101,21 +101,24 @@ export default function Register() {
       }
 
       if (data.user) {
-        // Insert profile data
-        const { error: profileError } = await supabase.from('profiles').insert({
-          id: data.user.id,
-          email: formData.email,
-          full_name: formData.fullName,
-          gender: formData.gender,
-          country: formData.country,
-          secret_question: formData.secretQuestion,
-          secret_answer_hash: secretAnswerHash,
-          plan: 'free',
-        })
+        // Update profile data (profile is auto-created by trigger)
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            full_name: formData.fullName,
+            gender: formData.gender,
+            country: formData.country,
+            secret_question: formData.secretQuestion,
+            secret_answer_hash: secretAnswerHash,
+          })
+          .eq('id', data.user.id)
 
         if (profileError) {
           throw new Error(profileError.message)
         }
+
+        // Wait a moment for the session to be established
+        await new Promise(resolve => setTimeout(resolve, 500))
 
         navigate('/home')
       }
