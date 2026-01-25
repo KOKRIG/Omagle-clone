@@ -2,19 +2,19 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 export function useMatchmaking(userId, profile, filters) {
-  const [matchStatus, setMatchStatus] = useState('idle') // idle, searching, found, failed
+  const [matchStatus, setMatchStatus] = useState('idle')
   const [matchedUser, setMatchedUser] = useState(null)
   const [matchId, setMatchId] = useState(null)
   const [error, setError] = useState(null)
 
   const isBanned = profile?.ban_until && new Date(profile.ban_until) > new Date()
-  const isPaid = profile?.is_paid
+  const hasAdPremium = profile?.ad_premium_expires_at && new Date(profile.ad_premium_expires_at) > new Date()
+  const isPaid = profile?.is_paid || hasAdPremium
 
   const joinQueue = useCallback(async () => {
     if (!userId || !profile) return
 
     try {
-      // Add user to match queue
       const { error: queueError } = await supabase.from('match_queue').upsert({
         user_id: userId,
         gender: profile.gender,
@@ -56,12 +56,10 @@ export function useMatchmaking(userId, profile, filters) {
     if (!userId || !profile) return null
 
     try {
-      // For banned users, reduce match probability (1 in 10)
       if (isBanned && Math.random() > 0.1) {
         return null
       }
 
-      // Build query for potential matches
       let query = supabase
         .from('match_queue')
         .select('*')
@@ -74,35 +72,26 @@ export function useMatchmaking(userId, profile, filters) {
       if (queryError) throw queryError
       if (!candidates || candidates.length === 0) return null
 
-      // Filter candidates based on compatibility
       const compatibleMatches = candidates.filter((candidate) => {
-        // Free plan: 6 same-gender matches, then 1 opposite-gender match (rotating pattern)
         if (!isPaid) {
-          const matchCount = profile.match_count || 0
-          const shouldMatchOpposite = matchCount % 7 === 6 // Every 7th match is opposite gender
+          const position = (profile.match_pattern_position || 0) % 10
 
-          if (shouldMatchOpposite) {
-            // Match opposite gender on 7th match
-            if (candidate.gender === profile.gender) return false
-          } else {
-            // Match same gender for first 6 matches
+          if (position >= 0 && position <= 7) {
             if (candidate.gender !== profile.gender) return false
+          } else {
+            if (candidate.gender === profile.gender) return false
           }
         }
 
-        // Paid plan with filters
         if (isPaid && !isBanned) {
-          // Apply gender filter
           if (filters?.gender && filters.gender !== 'any') {
             if (candidate.gender !== filters.gender) return false
           }
 
-          // Apply region filter
           if (filters?.region && filters.region !== '') {
             if (candidate.country !== filters.region) return false
           }
 
-          // Check if candidate's filters accept us
           if (candidate.is_paid) {
             if (candidate.filter_gender && candidate.filter_gender !== 'any') {
               if (profile.gender !== candidate.filter_gender) return false
@@ -118,7 +107,6 @@ export function useMatchmaking(userId, profile, filters) {
 
       if (compatibleMatches.length === 0) return null
 
-      // Priority: paid users match first
       const sortedMatches = compatibleMatches.sort((a, b) => {
         if (a.is_paid && !b.is_paid) return -1
         if (!a.is_paid && b.is_paid) return 1
@@ -136,13 +124,11 @@ export function useMatchmaking(userId, profile, filters) {
     if (!userId) return null
 
     try {
-      // Remove both users from queue
       await supabase
         .from('match_queue')
         .delete()
         .in('user_id', [userId, matchedUserId])
 
-      // Create active match
       const { data: match, error: matchError } = await supabase
         .from('active_matches')
         .insert({
@@ -154,13 +140,11 @@ export function useMatchmaking(userId, profile, filters) {
 
       if (matchError) throw matchError
 
-      // Update both users' presence and increment match count
       await supabase
         .from('profiles')
         .update({ presence: 'in_chat' })
         .in('id', [userId, matchedUserId])
 
-      // Increment match count for both users (for free plan gender ratio tracking)
       await supabase.rpc('increment_match_count', {
         user_id_param: userId
       })
@@ -168,24 +152,28 @@ export function useMatchmaking(userId, profile, filters) {
         user_id_param: matchedUserId
       })
 
+      const currentPosition = profile.match_pattern_position || 0
+      const newPosition = (currentPosition + 1) % 10
+      await supabase
+        .from('profiles')
+        .update({ match_pattern_position: newPosition })
+        .eq('id', userId)
+
       return match
     } catch (err) {
       console.error('Failed to create match:', err)
       return null
     }
-  }, [userId])
+  }, [userId, profile])
 
   const endMatch = useCallback(async () => {
     if (!matchId || !userId) return
 
     try {
-      // Delete ice candidates
       await supabase.from('ice_candidates').delete().eq('match_id', matchId)
 
-      // Delete the match
       await supabase.from('active_matches').delete().eq('id', matchId)
 
-      // Update presence
       await supabase
         .from('profiles')
         .update({ presence: 'online' })
@@ -199,7 +187,6 @@ export function useMatchmaking(userId, profile, filters) {
     }
   }, [matchId, userId])
 
-  // Automatic match searching
   useEffect(() => {
     if (matchStatus !== 'searching') return
 
@@ -215,12 +202,11 @@ export function useMatchmaking(userId, profile, filters) {
           setMatchStatus('found')
         }
       }
-    }, 2000) // Check every 2 seconds
+    }, 2000)
 
     return () => clearInterval(searchInterval)
   }, [matchStatus, findMatch, createMatch])
 
-  // Listen for incoming matches
   useEffect(() => {
     if (!userId) return
 
@@ -235,10 +221,8 @@ export function useMatchmaking(userId, profile, filters) {
           filter: `user2_id=eq.${userId}`,
         },
         async (payload) => {
-          // We were matched by another user
           const match = payload.new
 
-          // Get the other user's info
           const { data: otherUser } = await supabase
             .from('profiles')
             .select('id, full_name, gender, country')
@@ -246,7 +230,6 @@ export function useMatchmaking(userId, profile, filters) {
             .single()
 
           if (otherUser) {
-            // Remove ourselves from queue
             await supabase.from('match_queue').delete().eq('user_id', userId)
 
             setMatchedUser(otherUser)

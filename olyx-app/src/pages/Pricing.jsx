@@ -2,16 +2,16 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-
-// Stripe test mode configuration
-// In production, this would be your live publishable key
-const STRIPE_CHECKOUT_URL = 'https://checkout.stripe.com/c/pay/'
+import AdViewer from '../components/AdViewer'
+import BannerAd from '../components/BannerAd'
+import NativeAd from '../components/NativeAd'
 
 export default function Pricing() {
   const navigate = useNavigate()
   const { user, profile, setProfile } = useAuth()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [showAdViewer, setShowAdViewer] = useState(false)
 
   const handleUpgrade = async () => {
     if (!user) {
@@ -22,13 +22,6 @@ export default function Pricing() {
     setLoading(true)
 
     try {
-      // For MVP: Simulate Stripe checkout success
-      // In production, you would:
-      // 1. Create a Stripe Checkout session via Edge Function
-      // 2. Redirect to Stripe Checkout
-      // 3. Handle webhook on success to update database
-
-      // Simulated success flow for demo
       const today = new Date()
       const nextBilling = new Date(today)
       nextBilling.setDate(nextBilling.getDate() + 30)
@@ -61,9 +54,32 @@ export default function Pricing() {
     }
   }
 
+  const handleWatchAds = () => {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+    setShowAdViewer(true)
+  }
+
+  const handleAdComplete = async () => {
+    setShowAdViewer(false)
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+
+    if (data) {
+      setProfile(data)
+      navigate('/home')
+    }
+  }
+
   if (success) {
     return (
       <div className="pricing-container">
+        <BannerAd />
         <div className="success-card">
           <div className="success-icon">✓</div>
           <h2>Welcome to PRO!</h2>
@@ -92,7 +108,9 @@ export default function Pricing() {
         <p>Unlock premium features for a better experience</p>
       </header>
 
-      <div className="plans-grid">
+      <BannerAd />
+
+      <div className="plans-grid-extended">
         <div className="plan-card">
           <div className="plan-header">
             <h2>Free</h2>
@@ -104,25 +122,45 @@ export default function Pricing() {
           <ul className="plan-features">
             <li className="feature-included">Random video chat</li>
             <li className="feature-included">Text chat</li>
-            <li className="feature-included">Same-gender matching</li>
+            <li className="feature-included">8 same-gender, 2 opposite</li>
             <li className="feature-excluded">Gender filter</li>
             <li className="feature-excluded">Region filter</li>
             <li className="feature-excluded">Priority matchmaking</li>
             <li className="feature-excluded">Ad-free experience</li>
           </ul>
-          {profile?.is_paid ? (
-            <button className="btn btn-secondary" disabled>
-              Current Plan
-            </button>
-          ) : (
-            <button className="btn btn-secondary" disabled>
-              Current Plan
-            </button>
-          )}
+          <button className="btn btn-secondary" disabled>
+            Current Plan
+          </button>
+        </div>
+
+        <div className="plan-card plan-special">
+          <div className="plan-badge">FREE OPTION</div>
+          <div className="plan-header">
+            <h2>Watch Ads</h2>
+            <div className="plan-price">
+              <span className="price">4 Min</span>
+              <span className="period">Premium</span>
+            </div>
+          </div>
+          <ul className="plan-features">
+            <li className="feature-included">Watch 4 short ads</li>
+            <li className="feature-included">Get 4 minutes premium</li>
+            <li className="feature-included">Gender filter</li>
+            <li className="feature-included">Region filter</li>
+            <li className="feature-included">Priority matchmaking</li>
+            <li className="feature-info">Must wait 5s per ad</li>
+            <li className="feature-info">Repeatable anytime</li>
+          </ul>
+          <button
+            className="btn btn-primary"
+            onClick={handleWatchAds}
+          >
+            Watch 4 Ads Now
+          </button>
         </div>
 
         <div className="plan-card plan-featured">
-          <div className="plan-badge">MOST POPULAR</div>
+          <div className="plan-badge">BEST VALUE</div>
           <div className="plan-header">
             <h2>PRO</h2>
             <div className="plan-price">
@@ -133,7 +171,7 @@ export default function Pricing() {
           <ul className="plan-features">
             <li className="feature-included">Random video chat</li>
             <li className="feature-included">Text chat</li>
-            <li className="feature-included">Same-gender matching</li>
+            <li className="feature-included">Unlimited access</li>
             <li className="feature-included">Gender filter</li>
             <li className="feature-included">Region filter</li>
             <li className="feature-included">Priority matchmaking</li>
@@ -155,8 +193,18 @@ export default function Pricing() {
         </div>
       </div>
 
+      <NativeAd />
+
       <div className="pricing-faq">
         <h3>Frequently Asked Questions</h3>
+
+        <div className="faq-item">
+          <h4>How does the Watch Ads option work?</h4>
+          <p>
+            Watch 4 ads (5 seconds each) to unlock all premium features for 4 minutes.
+            You can repeat this anytime your premium expires. Perfect for trying premium features!
+          </p>
+        </div>
 
         <div className="faq-item">
           <h4>How does billing work?</h4>
@@ -196,6 +244,10 @@ export default function Pricing() {
           Questions? <Link to="/contact">Contact us</Link>
         </p>
       </footer>
+
+      {showAdViewer && (
+        <AdViewer onComplete={handleAdComplete} onClose={() => setShowAdViewer(false)} />
+      )}
     </div>
   )
 }

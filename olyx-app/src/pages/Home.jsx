@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import AdViewer from '../components/AdViewer'
+import BannerAd from '../components/BannerAd'
+import NativeAd from '../components/NativeAd'
 
 const PRO_EMAILS = ['taranjitkokri420@gmail.com', 'studio54code@gmail.com']
 
@@ -18,8 +21,11 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [activeUsers, setActiveUsers] = useState(0)
   const [showPermissionModal, setShowPermissionModal] = useState(false)
+  const [showAdViewer, setShowAdViewer] = useState(false)
+  const [adPremiumTimeLeft, setAdPremiumTimeLeft] = useState(null)
 
-  const isPro = profile?.is_paid || PRO_EMAILS.includes(profile?.email?.toLowerCase())
+  const hasAdPremium = profile?.ad_premium_expires_at && new Date(profile.ad_premium_expires_at) > new Date()
+  const isPro = profile?.is_paid || PRO_EMAILS.includes(profile?.email?.toLowerCase()) || hasAdPremium
 
   useEffect(() => {
     if (profile) {
@@ -29,6 +35,7 @@ export default function Home() {
       }
 
       checkBillingStatus()
+      checkAdPremiumStatus()
 
       if (profile.filter_gender) {
         setFilters((prev) => ({ ...prev, gender: profile.filter_gender }))
@@ -56,6 +63,24 @@ export default function Home() {
     return () => clearInterval(interval)
   }, [])
 
+  useEffect(() => {
+    if (hasAdPremium) {
+      const interval = setInterval(() => {
+        const timeLeft = Math.floor((new Date(profile.ad_premium_expires_at) - new Date()) / 1000)
+        if (timeLeft > 0) {
+          const minutes = Math.floor(timeLeft / 60)
+          const seconds = timeLeft % 60
+          setAdPremiumTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`)
+        } else {
+          setAdPremiumTimeLeft(null)
+          window.location.reload()
+        }
+      }, 1000)
+
+      return () => clearInterval(interval)
+    }
+  }, [hasAdPremium, profile])
+
   const checkBillingStatus = async () => {
     if (PRO_EMAILS.includes(profile?.email?.toLowerCase())) return
     if (!profile?.is_paid) return
@@ -70,6 +95,17 @@ export default function Home() {
       if (!error) {
         setProfile({ ...profile, is_paid: false })
       }
+    }
+  }
+
+  const checkAdPremiumStatus = async () => {
+    if (profile?.ad_premium_expires_at && new Date(profile.ad_premium_expires_at) < new Date()) {
+      await supabase
+        .from('profiles')
+        .update({ ad_premium_expires_at: null })
+        .eq('id', user.id)
+
+      setProfile({ ...profile, ad_premium_expires_at: null })
     }
   }
 
@@ -123,6 +159,23 @@ export default function Home() {
     navigate('/login')
   }
 
+  const handleWatchAds = () => {
+    setShowAdViewer(true)
+  }
+
+  const handleAdComplete = async () => {
+    setShowAdViewer(false)
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+
+    if (data) {
+      setProfile(data)
+    }
+  }
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
@@ -142,6 +195,8 @@ export default function Home() {
       </header>
 
       <main className="dashboard-main">
+        <BannerAd />
+
         <div className="dashboard-grid">
           <div className="main-action-card">
             <div className="card-glow"></div>
@@ -177,7 +232,9 @@ export default function Home() {
               <div className="card-header">
                 <h3>Your Profile</h3>
                 {isPro ? (
-                  <span className="pro-badge">PRO</span>
+                  <span className="pro-badge">
+                    {hasAdPremium ? `PRO ${adPremiumTimeLeft}` : 'PRO'}
+                  </span>
                 ) : (
                   <span className="free-badge">FREE</span>
                 )}
@@ -197,9 +254,14 @@ export default function Home() {
                 </div>
               </div>
               {!isPro && (
-                <Link to="/pricing" className="upgrade-link">
-                  Upgrade to PRO
-                </Link>
+                <>
+                  <button onClick={handleWatchAds} className="watch-ads-btn">
+                    Watch Ads for 4 Min Premium
+                  </button>
+                  <Link to="/pricing" className="upgrade-link">
+                    Upgrade to PRO
+                  </Link>
+                </>
               )}
             </div>
 
@@ -242,13 +304,17 @@ export default function Home() {
 
                 {!isPro && (
                   <div className="filters-overlay">
-                    <Link to="/pricing">Unlock with PRO</Link>
+                    <button onClick={handleWatchAds} className="watch-ads-overlay-btn">
+                      Watch Ads to Unlock
+                    </button>
                   </div>
                 )}
               </div>
             </div>
           </div>
         </div>
+
+        <NativeAd />
 
         <div className="features-row">
           <div className="feature-item">
@@ -298,6 +364,10 @@ export default function Home() {
             </div>
           </div>
         </div>
+      )}
+
+      {showAdViewer && (
+        <AdViewer onComplete={handleAdComplete} onClose={() => setShowAdViewer(false)} />
       )}
     </div>
   )
