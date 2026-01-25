@@ -12,18 +12,18 @@ export default function Landing() {
         <section className="hero">
           <div className="container hero-container">
             <h1 className="hero-title fade-in">
-              The Next-Generation
+              Free Random Video Chat
               <br />
-              Omegle Alternative
+              Best Omegle Alternative
             </h1>
             <p className="hero-subtitle fade-in delay-1">
-              Real people. No bots. No recordings.
+              Connect with strangers worldwide through video call and text chat.
               <br />
-              Just safe, meaningful conversations.
+              No bots. No recordings. 100% private and secure.
             </p>
             <div className="hero-cta fade-in delay-2">
               <Link to="/register" className="btn btn-primary btn-hero">
-                Start Chatting Now
+                Start Video Chat Free
               </Link>
               <Link to="/login" className="btn btn-secondary btn-hero">
                 Login
@@ -63,60 +63,54 @@ export default function Landing() {
         {/* Features Section */}
         <section className="features">
           <div className="container">
-            <h2 className="section-title">Why Olyx.site is Different</h2>
+            <h2 className="section-title">The Best Free Video Chat Platform for Meeting Strangers</h2>
 
             <div className="features-grid-modern">
               <div className="feature-modern">
                 <div className="feature-number">01</div>
-                <h3>Smart Gender & Region Matching</h3>
+                <h3>Random Video Call Matching</h3>
                 <p>
-                  Match by gender and region preferences. Paid users unlock advanced
-                  filters for better connections.
+                  Instantly connect with random strangers for video calls. Choose gender preferences to chat with girls or guys. Advanced filters for premium users.
                 </p>
               </div>
 
               <div className="feature-modern">
                 <div className="feature-number">02</div>
-                <h3>Bot-Free Conversations</h3>
+                <h3>Bot-Free Video Chat</h3>
                 <p>
-                  Advanced detection systems ensure you're always talking to real
-                  humans, not automated bots or fake streams.
+                  Talk to real people only. Our advanced detection systems block bots, fake streams, and recordings to ensure authentic stranger video calls.
                 </p>
               </div>
 
               <div className="feature-modern">
                 <div className="feature-number">03</div>
-                <h3>Video + Text Together</h3>
+                <h3>Video Call + Text Chat</h3>
                 <p>
-                  Talk face-to-face and exchange messages simultaneously. Build real
-                  connections with multiple communication methods.
+                  Combine face-to-face video calls with instant text messaging. Meet new people and build connections through multiple chat methods.
                 </p>
               </div>
 
               <div className="feature-modern">
                 <div className="feature-number">04</div>
-                <h3>Privacy First</h3>
+                <h3>100% Private Stranger Chat</h3>
                 <p>
-                  No recordings. No chat history. No data selling. Your conversations
-                  exist only while you're connected.
+                  No recordings. No chat logs. No data collection. Your random video calls remain completely private and secure with peer-to-peer connections.
                 </p>
               </div>
 
               <div className="feature-modern">
                 <div className="feature-number">05</div>
-                <h3>Fast & Lightweight</h3>
+                <h3>Fast Video Chat Experience</h3>
                 <p>
-                  Optimized for all network speeds with adaptive video quality. Smooth
-                  experience even on slower connections.
+                  Lightning-fast connections for smooth video calls. Adaptive quality for all internet speeds. Works perfectly on mobile and desktop.
                 </p>
               </div>
 
               <div className="feature-modern">
                 <div className="feature-number">06</div>
-                <h3>Built for Safety</h3>
+                <h3>Safe Stranger Video Platform</h3>
                 <p>
-                  Live moderation, easy reporting, and automatic enforcement keep our
-                  community respectful and safe.
+                  AI-powered moderation, one-click reporting, and strict community guidelines ensure safe video chats with strangers worldwide.
                 </p>
               </div>
             </div>
@@ -160,11 +154,34 @@ export default function Landing() {
         {/* Final CTA */}
         <section className="final-cta">
           <div className="container">
-            <h2>Ready to Meet Real People?</h2>
-            <p>Join thousands making meaningful connections every day</p>
+            <h2>Start Free Video Chat with Strangers Now</h2>
+            <p>Join thousands of people worldwide making real connections through random video calls daily. No registration required to start.</p>
             <Link to="/register" className="btn btn-primary btn-hero">
-              Start Chatting Now
+              Start Random Video Chat
             </Link>
+          </div>
+        </section>
+
+        {/* SEO Content Section */}
+        <section className="features" style={{ paddingTop: '2rem' }}>
+          <div className="container">
+            <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+              <h2 className="section-title">Why Olyx is the Best Omegle Alternative</h2>
+              <div style={{ color: 'var(--text-secondary)', lineHeight: '1.8', marginBottom: '2rem' }}>
+                <p style={{ marginBottom: '1rem' }}>
+                  Looking for a free video chat platform to meet new people? Olyx is the leading Omegle alternative for random video calls with strangers worldwide. Whether you want to video chat with girls, connect with guys, or simply talk to strangers online, our platform offers the best experience for random video calls.
+                </p>
+                <p style={{ marginBottom: '1rem' }}>
+                  Unlike other video chat sites, Olyx provides authentic stranger connections with advanced bot detection, ensuring you only video call with real people. Our platform supports both random video chat and text chat simultaneously, making it easy to build genuine connections with strangers from around the world.
+                </p>
+                <p style={{ marginBottom: '1rem' }}>
+                  With gender filtering options, you can choose to video chat with girls or guys based on your preferences. Premium users get access to region filters and priority matching for even better stranger video call experiences. All video chats are 100% private with no recordings or data collection.
+                </p>
+                <p>
+                  Start your free video chat journey today. No download required, no registration needed for browsing. Simply click start and connect with random strangers for instant video calls. Experience the best Omegle alternative for meeting new people through safe, secure, and private video chat.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
       </main>

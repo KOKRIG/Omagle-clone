@@ -1,0 +1,13 @@
+# Allow all search engines
+User-agent: *
+Allow: /
+
+# Disallow private pages
+Disallow: /chat
+Disallow: /home
+
+# Sitemap location
+Sitemap: https://olyx.site/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1
