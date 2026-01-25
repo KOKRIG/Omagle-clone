@@ -6,7 +6,10 @@ export default function Footer() {
       <div className="footer-container">
         <div className="footer-content">
           <div className="footer-section">
-            <h3 className="footer-logo gradient-text">Olyx.site</h3>
+            <h3 className="footer-logo gradient-text">
+              <img src="/olyx-logo-o.png" alt="Olyx Logo" className="footer-logo-icon" />
+              lyx.site
+            </h3>
             <p className="footer-tagline">
               Real people. No bots. No recordings.
               <br />

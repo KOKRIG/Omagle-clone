@@ -8,7 +8,8 @@ export default function Header() {
     <header className="public-header">
       <div className="header-container">
         <Link to="/" className="header-logo gradient-text">
-          Olyx.site
+          <img src="/olyx-logo-o.png" alt="Olyx Logo" className="logo-icon" />
+          lyx.site
         </Link>
 
         <nav className={`header-nav ${mobileMenuOpen ? 'mobile-open' : ''}`}>
