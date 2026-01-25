@@ -1,8 +1,55 @@
 import { Link } from 'react-router-dom'
+import { useEffect } from 'react'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 
 export default function Landing() {
+  useEffect(() => {
+    // Load Banner Ad
+    const bannerScript = document.createElement('script')
+    bannerScript.innerHTML = `
+      atOptions = {
+        'key' : '35c8a2602d31560676ad1988b16f8136',
+        'format' : 'iframe',
+        'height' : 60,
+        'width' : 468,
+        'params' : {}
+      };
+    `
+    document.getElementById('banner-ad-container')?.appendChild(bannerScript)
+
+    const bannerInvokeScript = document.createElement('script')
+    bannerInvokeScript.src = 'https://www.highperformanceformat.com/35c8a2602d31560676ad1988b16f8136/invoke.js'
+    document.getElementById('banner-ad-container')?.appendChild(bannerInvokeScript)
+
+    // Load Native Ad
+    const nativeScript = document.createElement('script')
+    nativeScript.async = true
+    nativeScript.setAttribute('data-cfasync', 'false')
+    nativeScript.src = 'https://pl28502753.effectivegatecpm.com/99507b6482f10827a9ff00a49258c20e/invoke.js'
+
+    const nativeContainer = document.createElement('div')
+    nativeContainer.id = 'container-99507b6482f10827a9ff00a49258c20e'
+
+    const nativeAdContainer = document.getElementById('native-ad-container')
+    if (nativeAdContainer) {
+      nativeAdContainer.appendChild(nativeScript)
+      nativeAdContainer.appendChild(nativeContainer)
+    }
+
+    return () => {
+      // Cleanup on unmount
+      const bannerContainer = document.getElementById('banner-ad-container')
+      if (bannerContainer) {
+        bannerContainer.innerHTML = ''
+      }
+      const nativeAdContainerCleanup = document.getElementById('native-ad-container')
+      if (nativeAdContainerCleanup) {
+        nativeAdContainerCleanup.innerHTML = ''
+      }
+    }
+  }, [])
+
   return (
     <div className="public-page">
       <Header />
@@ -30,6 +77,11 @@ export default function Landing() {
               </Link>
             </div>
           </div>
+        </section>
+
+        {/* Banner Ad */}
+        <section style={{ padding: '2rem 0', display: 'flex', justifyContent: 'center' }}>
+          <div id="banner-ad-container" style={{ minHeight: '60px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}></div>
         </section>
 
         {/* Trust Signals */}
@@ -114,6 +166,13 @@ export default function Landing() {
                 </p>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Native Ad */}
+        <section style={{ padding: '2rem 0', display: 'flex', justifyContent: 'center' }}>
+          <div className="container" style={{ maxWidth: '900px' }}>
+            <div id="native-ad-container" style={{ minHeight: '100px' }}></div>
           </div>
         </section>
 
