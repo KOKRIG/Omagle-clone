@@ -158,39 +158,6 @@ export default function Pricing() {
             Watch 4 Ads Now
           </button>
         </div>
-
-        <div className="plan-card plan-featured">
-          <div className="plan-badge">BEST VALUE</div>
-          <div className="plan-header">
-            <h2>PRO</h2>
-            <div className="plan-price">
-              <span className="price">$9</span>
-              <span className="period">/month</span>
-            </div>
-          </div>
-          <ul className="plan-features">
-            <li className="feature-included">Random video chat</li>
-            <li className="feature-included">Text chat</li>
-            <li className="feature-included">Unlimited access</li>
-            <li className="feature-included">Gender filter</li>
-            <li className="feature-included">Region filter</li>
-            <li className="feature-included">Priority matchmaking</li>
-            <li className="feature-included">Ad-free experience</li>
-          </ul>
-          {profile?.is_paid ? (
-            <button className="btn btn-primary" disabled>
-              Current Plan
-            </button>
-          ) : (
-            <button
-              className="btn btn-primary"
-              onClick={handleUpgrade}
-              disabled={loading}
-            >
-              {loading ? 'Processing...' : 'Upgrade to PRO'}
-            </button>
-          )}
-        </div>
       </div>
 
       <NativeAd />

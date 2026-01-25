@@ -25,14 +25,23 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     let mounted = true
+    let timeoutId
 
     const initAuth = async () => {
       try {
+        timeoutId = setTimeout(() => {
+          if (mounted) {
+            console.warn('Auth timeout - forcing complete')
+            setLoading(false)
+          }
+        }, 5000)
+
         const { data: { session }, error } = await supabase.auth.getSession()
 
         if (error) throw error
 
         if (mounted) {
+          clearTimeout(timeoutId)
           setUser(session?.user ?? null)
           if (session?.user) {
             await fetchProfile(session.user.id)
@@ -42,6 +51,7 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error('Auth initialization error:', error)
         if (mounted) {
+          clearTimeout(timeoutId)
           setUser(null)
           setProfile(null)
           setLoading(false)
@@ -67,6 +77,7 @@ export const AuthProvider = ({ children }) => {
 
     return () => {
       mounted = false
+      if (timeoutId) clearTimeout(timeoutId)
       subscription.unsubscribe()
     }
   }, [])
