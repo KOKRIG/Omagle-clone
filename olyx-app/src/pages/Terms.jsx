@@ -3,6 +3,7 @@ import AnimatedBackground from '../components/AnimatedBackground'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import BannerAd from '../components/BannerAd'
+import NativeAd from '../components/NativeAd'
 
 export default function Terms() {
   return (
@@ -367,6 +368,8 @@ export default function Terms() {
               </p>
               <p className="contact-info">support@olyx.site</p>
             </section>
+
+            <NativeAd />
 
             <div className="acceptance-box">
               <h3>By Using Olyx.site, You Agree To:</h3>

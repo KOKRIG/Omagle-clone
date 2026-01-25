@@ -122,7 +122,7 @@ export default function Pricing() {
           <ul className="plan-features">
             <li className="feature-included">Random video chat</li>
             <li className="feature-included">Text chat</li>
-            <li className="feature-included">8 same-gender, 2 opposite</li>
+            <li className="feature-included">Basic matching</li>
             <li className="feature-excluded">Gender filter</li>
             <li className="feature-excluded">Region filter</li>
             <li className="feature-excluded">Priority matchmaking</li>

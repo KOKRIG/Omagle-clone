@@ -3,6 +3,7 @@ import AnimatedBackground from '../components/AnimatedBackground'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import BannerAd from '../components/BannerAd'
+import NativeAd from '../components/NativeAd'
 
 export default function Safety() {
   return (
@@ -192,6 +193,8 @@ export default function Safety() {
                 </div>
               </div>
             </section>
+
+            <NativeAd />
 
             <div className="cta-box">
               <h3>Questions About Safety?</h3>

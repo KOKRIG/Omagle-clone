@@ -4,7 +4,11 @@ import { supabase } from '../lib/supabase'
 export default function AdViewer({ onComplete, onClose }) {
   const [currentAd, setCurrentAd] = useState(1)
   const [timeRemaining, setTimeRemaining] = useState(5)
-  const [isAdLoaded, setIsAdLoaded] = useState(false)
+  const [showAdBlockerWarning, setShowAdBlockerWarning] = useState(false)
+
+  useEffect(() => {
+    openPopupAd()
+  }, [currentAd])
 
   useEffect(() => {
     if (timeRemaining > 0) {
@@ -12,19 +16,35 @@ export default function AdViewer({ onComplete, onClose }) {
         setTimeRemaining(timeRemaining - 1)
       }, 1000)
       return () => clearTimeout(timer)
-    } else if (currentAd < 4) {
+    }
+  }, [timeRemaining])
+
+  const openPopupAd = () => {
+    try {
+      const popup = window.open(
+        'https://olyx.site',
+        `popup_ad_${currentAd}`,
+        'width=800,height=600,scrollbars=yes,resizable=yes'
+      )
+
+      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+        setShowAdBlockerWarning(true)
+      }
+    } catch (e) {
+      setShowAdBlockerWarning(true)
+    }
+  }
+
+  const handleNextAd = () => {
+    if (timeRemaining > 0) return
+
+    if (currentAd < 4) {
       setCurrentAd(currentAd + 1)
       setTimeRemaining(5)
-      setIsAdLoaded(false)
     } else {
       handleComplete()
     }
-  }, [timeRemaining, currentAd])
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsAdLoaded(true), 500)
-    return () => clearTimeout(timer)
-  }, [currentAd])
+  }
 
   const handleComplete = async () => {
     const expiresAt = new Date(Date.now() + 4 * 60 * 1000).toISOString()
@@ -56,41 +76,58 @@ export default function AdViewer({ onComplete, onClose }) {
             </div>
           </div>
           <div className="ad-timer">
-            {timeRemaining > 0 ? `Wait ${timeRemaining}s` : 'Loading next...'}
+            {timeRemaining > 0 ? `Wait ${timeRemaining}s` : 'Ready'}
           </div>
         </div>
 
         <div className="ad-content-wrapper">
-          {isAdLoaded ? (
-            <div className="ad-content">
-              <div className="native-ad-container">
-                <script
-                  async
-                  data-cfasync="false"
-                  src="https://pl28502753.effectivegatecpm.com/99507b6482f10827a9ff00a49258c20e/invoke.js"
-                />
-                <div id="container-99507b6482f10827a9ff00a49258c20e"></div>
-              </div>
-              <div className="ad-placeholder">
-                <div className="ad-icon">📺</div>
-                <p>Advertisement {currentAd}</p>
-                <p className="ad-subtitle">Unlocking premium features...</p>
-              </div>
+          {showAdBlockerWarning ? (
+            <div className="ad-blocker-warning">
+              <div className="warning-icon">⚠️</div>
+              <h3>Ad Blocker Detected</h3>
+              <p>Please disable your ad blocker to continue.</p>
+              <p className="warning-subtitle">
+                This feature is supported by ads. Disabling your ad blocker allows us to provide free premium access.
+              </p>
+              <button onClick={onClose} className="warning-btn">
+                Go Back
+              </button>
             </div>
           ) : (
-            <div className="ad-loading">Loading advertisement...</div>
+            <div className="ad-content">
+              <div className="ad-icon">📺</div>
+              <h3>Advertisement {currentAd}</h3>
+              <p className="ad-subtitle">
+                A popup window has opened. Please wait {timeRemaining > 0 ? `${timeRemaining} seconds` : 'and close it'} before continuing.
+              </p>
+              <div className="ad-info-box">
+                <p>✓ Popup ad opened automatically</p>
+                <p>✓ Wait for the timer to complete</p>
+                <p>✓ Then click "Next Ad" to continue</p>
+              </div>
+            </div>
           )}
         </div>
 
         <div className="ad-viewer-footer">
           <p className="ad-info">
-            Watch {4 - currentAd} more {4 - currentAd === 1 ? 'ad' : 'ads'} to unlock 4 minutes of premium
+            {currentAd < 4
+              ? `${4 - currentAd} more ${4 - currentAd === 1 ? 'ad' : 'ads'} to unlock 4 minutes of premium`
+              : 'All ads completed! Claim your premium access.'
+            }
           </p>
-          {timeRemaining === 0 && currentAd === 4 && (
-            <button onClick={handleComplete} className="ad-continue-btn">
-              Continue to Premium
+          <div className="ad-buttons">
+            <button onClick={onClose} className="ad-cancel-btn">
+              Cancel
             </button>
-          )}
+            <button
+              onClick={handleNextAd}
+              className="ad-continue-btn"
+              disabled={timeRemaining > 0}
+            >
+              {currentAd < 4 ? 'Next Ad' : 'Claim Premium'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

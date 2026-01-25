@@ -1,6 +1,25 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
+const MATCHING_PATTERNS = [
+  [1, 1, 0, 1, 1, 1, 0, 1, 1, 1],
+  [1, 1, 1, 0, 0, 1, 1, 1, 0, 0],
+  [1, 0, 1, 1, 1, 1, 1, 0, 1, 1],
+  [0, 0, 0, 0, 1, 1, 1, 1, 1, 1],
+  [1, 1, 1, 1, 1, 1, 0, 1, 1, 1],
+  [1, 0, 1, 0, 1, 1, 1, 1, 0, 1],
+  [1, 1, 0, 1, 1, 1, 1, 1, 0, 1],
+  [0, 1, 1, 1, 1, 1, 1, 0, 1, 1],
+]
+
+const getMatchingGenderForPattern = (profile) => {
+  const patternIndex = (profile.match_pattern_seed || 0) % MATCHING_PATTERNS.length
+  const pattern = MATCHING_PATTERNS[patternIndex]
+  const position = (profile.match_pattern_position || 0) % pattern.length
+
+  return pattern[position] === 1 ? profile.gender : (profile.gender === 'male' ? 'female' : 'male')
+}
+
 export function useMatchmaking(userId, profile, filters) {
   const [matchStatus, setMatchStatus] = useState('idle')
   const [matchedUser, setMatchedUser] = useState(null)
@@ -83,13 +102,8 @@ export function useMatchmaking(userId, profile, filters) {
 
       const compatibleMatches = candidates.filter((candidate) => {
         if (!isPaid) {
-          const position = (profile.match_pattern_position || 0) % 10
-
-          if (position >= 0 && position <= 7) {
-            if (candidate.gender !== profile.gender) return false
-          } else {
-            if (candidate.gender === profile.gender) return false
-          }
+          const expectedGender = getMatchingGenderForPattern(profile)
+          if (candidate.gender !== expectedGender) return false
         }
 
         if (isPaid && !isBanned) {
@@ -161,8 +175,10 @@ export function useMatchmaking(userId, profile, filters) {
         user_id_param: matchedUserId
       })
 
+      const patternIndex = (profile.match_pattern_seed || 0) % MATCHING_PATTERNS.length
+      const pattern = MATCHING_PATTERNS[patternIndex]
       const currentPosition = profile.match_pattern_position || 0
-      const newPosition = (currentPosition + 1) % 10
+      const newPosition = (currentPosition + 1) % pattern.length
       await supabase
         .from('profiles')
         .update({ match_pattern_position: newPosition })

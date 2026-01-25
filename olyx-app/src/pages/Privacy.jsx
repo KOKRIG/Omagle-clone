@@ -3,6 +3,7 @@ import AnimatedBackground from '../components/AnimatedBackground'
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import BannerAd from '../components/BannerAd'
+import NativeAd from '../components/NativeAd'
 
 export default function Privacy() {
   return (
@@ -192,6 +193,8 @@ export default function Privacy() {
               <p className="contact-info">privacy@olyx.site</p>
               <p>We will respond to all legitimate requests within 30 days.</p>
             </section>
+
+            <NativeAd />
 
             <div className="summary-box">
               <h3>Privacy Summary</h3>
