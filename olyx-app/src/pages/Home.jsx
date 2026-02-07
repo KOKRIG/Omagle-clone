@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
+import { useVisitorCount } from '../hooks/useVisitorCount'
 import AdViewer from '../components/AdViewer'
 import BannerAd from '../components/BannerAd'
 import VerticalBannerAd from '../components/VerticalBannerAd'
@@ -20,6 +21,7 @@ export default function Home() {
   const [isBanned, setIsBanned] = useState(false)
   const [banExpiry, setBanExpiry] = useState(null)
   const [loading, setLoading] = useState(false)
+  const visitorCount = useVisitorCount()
   const [activeUsers, setActiveUsers] = useState(0)
   const [showPermissionModal, setShowPermissionModal] = useState(false)
   const [showAdViewer, setShowAdViewer] = useState(false)
@@ -204,7 +206,7 @@ export default function Home() {
         <div className="dashboard-nav">
           <div className="active-indicator">
             <span className="pulse-dot"></span>
-            <span>{activeUsers} online</span>
+            <span>{visitorCount > 0 ? visitorCount : activeUsers} online</span>
           </div>
           <Link to="/pricing" className="nav-link">Pricing</Link>
           <button onClick={handleLogout} className="nav-link logout-btn">
