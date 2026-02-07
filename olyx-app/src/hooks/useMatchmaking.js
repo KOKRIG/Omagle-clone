@@ -271,8 +271,8 @@ export function useMatchmaking(userId, profile, filters) {
   useEffect(() => {
     if (!userId) return
 
-    const subscription = supabase
-      .channel('match_updates')
+    const channel = supabase
+      .channel(`match-notify-${userId}`)
       .on(
         'postgres_changes',
         {
@@ -309,7 +309,7 @@ export function useMatchmaking(userId, profile, filters) {
       .subscribe()
 
     return () => {
-      subscription.unsubscribe()
+      supabase.removeChannel(channel)
     }
   }, [userId])
 

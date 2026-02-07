@@ -123,7 +123,6 @@ export default function Home() {
 
   const handleStartChat = () => {
     if (isBanned) return
-    window.open('about:blank', '_blank')
     setShowPermissionModal(true)
   }
 

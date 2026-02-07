@@ -1037,6 +1037,12 @@ h3 { font-size: 1.25rem; }
   height: 100vh;
 }
 
+.chat-content-row {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
 .chat-safety-bar {
   display: flex;
   align-items: center;
@@ -1639,6 +1645,10 @@ h3 { font-size: 1.25rem; }
 
   .chat-center {
     height: 100vh;
+  }
+
+  .chat-content-row {
+    flex-direction: column;
   }
 
   .chat-sidebar {
