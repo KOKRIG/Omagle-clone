@@ -23,6 +23,7 @@ export function useMatchmaking(userId, profile, filters) {
   const [matchStatus, setMatchStatus] = useState('idle')
   const [matchedUser, setMatchedUser] = useState(null)
   const [matchId, setMatchId] = useState(null)
+  const [isMatchCreator, setIsMatchCreator] = useState(false)
   const [error, setError] = useState(null)
   const [onlineCount, setOnlineCount] = useState(0)
   const [searchDuration, setSearchDuration] = useState(0)
@@ -51,6 +52,7 @@ export function useMatchmaking(userId, profile, filters) {
       setMatchStatus('searching')
       setSearchDuration(0)
       matchingRef.current = false
+      setIsMatchCreator(false)
 
       const { count } = await supabase
         .from('match_queue')
@@ -77,6 +79,7 @@ export function useMatchmaking(userId, profile, filters) {
       setMatchStatus('idle')
       setMatchedUser(null)
       setMatchId(null)
+      setIsMatchCreator(false)
       matchingRef.current = false
     } catch (err) {
       console.error('Failed to leave queue:', err)
@@ -140,9 +143,11 @@ export function useMatchmaking(userId, profile, filters) {
     }
   }, [userId, profile, filters, isPaid, isBanned])
 
-  const createMatch = useCallback(async (matchedUserId) => {
+  const createMatch = useCallback(async (candidate) => {
     if (!userId || matchingRef.current) return null
     matchingRef.current = true
+
+    const matchedUserId = candidate.user_id
 
     try {
       const { data: existing } = await supabase
@@ -189,7 +194,16 @@ export function useMatchmaking(userId, profile, filters) {
         .update({ match_pattern_position: newPosition })
         .eq('id', userId)
 
-      return match
+      const { data: otherProfile } = await supabase
+        .from('profiles')
+        .select('id, full_name, gender, country')
+        .eq('id', matchedUserId)
+        .maybeSingle()
+
+      return {
+        match,
+        otherUser: otherProfile || { id: matchedUserId, gender: candidate.gender, country: candidate.country },
+      }
     } catch (err) {
       console.error('Failed to create match:', err)
       matchingRef.current = false
@@ -211,6 +225,7 @@ export function useMatchmaking(userId, profile, filters) {
       setMatchStatus('idle')
       setMatchedUser(null)
       setMatchId(null)
+      setIsMatchCreator(false)
       matchingRef.current = false
     } catch (err) {
       console.error('Failed to end match:', err)
@@ -223,14 +238,15 @@ export function useMatchmaking(userId, profile, filters) {
     const jitter = Math.floor(Math.random() * 1000)
 
     const searchInterval = setInterval(async () => {
-      const match = await findMatch()
+      const candidate = await findMatch()
 
-      if (match) {
-        const createdMatch = await createMatch(match.user_id)
+      if (candidate) {
+        const result = await createMatch(candidate)
 
-        if (createdMatch) {
-          setMatchedUser(match)
-          setMatchId(createdMatch.id)
+        if (result) {
+          setMatchedUser(result.otherUser)
+          setMatchId(result.match.id)
+          setIsMatchCreator(true)
           setMatchStatus('found')
         }
       }
@@ -284,6 +300,7 @@ export function useMatchmaking(userId, profile, filters) {
 
             setMatchedUser(otherUser)
             setMatchId(match.id)
+            setIsMatchCreator(false)
             setMatchStatus('found')
             matchingRef.current = false
           }
@@ -300,6 +317,7 @@ export function useMatchmaking(userId, profile, filters) {
     matchStatus,
     matchedUser,
     matchId,
+    isMatchCreator,
     error,
     onlineCount,
     searchDuration,

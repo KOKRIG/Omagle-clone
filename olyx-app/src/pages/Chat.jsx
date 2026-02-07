@@ -32,6 +32,7 @@ export default function Chat() {
   const [showReportModal, setShowReportModal] = useState(false)
   const [reportReason, setReportReason] = useState('')
   const [reportSubmitting, setReportSubmitting] = useState(false)
+  const [autoSkipping, setAutoSkipping] = useState(false)
 
   const localVideoRef = useRef(null)
   const remoteVideoRef = useRef(null)
@@ -41,14 +42,13 @@ export default function Chat() {
     matchStatus,
     matchedUser,
     matchId,
+    isMatchCreator,
     onlineCount,
     searchDuration,
     joinQueue,
     leaveQueue,
     endMatch,
   } = useMatchmaking(user?.id, profile, filters)
-
-  const isInitiator = matchedUser && profile?.id < matchedUser.id
 
   const {
     localStream,
@@ -59,18 +59,44 @@ export default function Chat() {
     toggleVideo,
     closeConnection,
     destroyPeerConnection,
-  } = useWebRTC(matchId, user?.id, isInitiator)
+  } = useWebRTC(matchId, user?.id, isMatchCreator)
+
+  const handleDisconnect = useCallback(async () => {
+    destroyPeerConnection()
+    await endMatch()
+    setChatMessages([])
+
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ presence: 'online' })
+        .eq('id', user.id)
+    }
+  }, [destroyPeerConnection, endMatch, user])
+
+  const handleNext = useCallback(async () => {
+    setAutoSkipping(false)
+    await handleDisconnect()
+    joinQueue()
+  }, [handleDisconnect, joinQueue])
 
   const handleViolation = useCallback(
     async (type) => {
       if (type === 'nsfw_content' || type === 'bot_detected') {
         await handleDisconnect()
         if (matchedUser) {
-          await submitReport(type === 'nsfw_content' ? 'inappropriate' : 'spam')
+          await supabase.from('reports').insert({
+            reporter_id: user.id,
+            reported_id: matchedUser.id,
+            reason: type === 'nsfw_content' ? 'inappropriate' : 'spam',
+          })
+          await supabase.rpc('increment_report_count', {
+            reported_user_id: matchedUser.id,
+          })
         }
       }
     },
-    [matchedUser]
+    [matchedUser, user, handleDisconnect]
   )
 
   const { startMonitoring, stopMonitoring } = useNSFWDetection(
@@ -105,26 +131,26 @@ export default function Chat() {
     }
   }, [user, profile])
 
-  const handleDisconnect = async () => {
-    stopMonitoring()
-    destroyPeerConnection()
-    await endMatch()
-    setChatMessages([])
-
-    if (user) {
-      await supabase
-        .from('profiles')
-        .update({ presence: 'online' })
-        .eq('id', user.id)
+  useEffect(() => {
+    if (connectionState === 'failed' && matchStatus === 'found' && !autoSkipping) {
+      setAutoSkipping(true)
+      handleNext()
     }
-  }
+  }, [connectionState, matchStatus, autoSkipping, handleNext])
 
-  const handleNext = async () => {
-    await handleDisconnect()
-    joinQueue()
-  }
+  useEffect(() => {
+    const cleanup = () => {
+      if (user) {
+        navigator.sendBeacon && supabase.from('match_queue').delete().eq('user_id', user.id)
+      }
+    }
+
+    window.addEventListener('beforeunload', cleanup)
+    return () => window.removeEventListener('beforeunload', cleanup)
+  }, [user])
 
   const handleExit = async () => {
+    stopMonitoring()
     await handleDisconnect()
     closeConnection()
     navigate('/home')
@@ -289,7 +315,7 @@ export default function Chat() {
                   />
                 )}
 
-                {matchStatus === 'found' && connectionState !== 'connected' && (
+                {matchStatus === 'found' && connectionState !== 'connected' && connectionState !== 'failed' && (
                   <div className="connection-overlay">
                     <div className="connecting-spinner"></div>
                     <p>Establishing connection...</p>

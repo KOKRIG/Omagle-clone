@@ -7,7 +7,24 @@ const ICE_SERVERS = [
   { urls: 'stun:stun2.l.google.com:19302' },
   { urls: 'stun:stun3.l.google.com:19302' },
   { urls: 'stun:stun4.l.google.com:19302' },
+  {
+    urls: 'turn:openrelay.metered.ca:80',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
 ]
+
+const CONNECTION_TIMEOUT = 20000
 
 export function useWebRTC(matchId, userId, isInitiator) {
   const [localStream, setLocalStream] = useState(null)
@@ -36,6 +53,11 @@ export function useWebRTC(matchId, userId, isInitiator) {
 
   const destroyPeerConnection = useCallback(() => {
     if (pcRef.current) {
+      pcRef.current.ontrack = null
+      pcRef.current.onicecandidate = null
+      pcRef.current.onconnectionstatechange = null
+      pcRef.current.oniceconnectionstatechange = null
+      pcRef.current.ondatachannel = null
       pcRef.current.close()
       pcRef.current = null
     }
@@ -80,6 +102,7 @@ export function useWebRTC(matchId, userId, isInitiator) {
     let cancelled = false
     let matchChannel = null
     let iceChannel = null
+    let timeoutId = null
 
     const processCandidateQueue = async (pc) => {
       while (candidateQueue.current.length > 0) {
@@ -87,7 +110,7 @@ export function useWebRTC(matchId, userId, isInitiator) {
         try {
           await pc.addIceCandidate(new RTCIceCandidate(c))
         } catch (e) {
-          console.error('ICE candidate error:', e)
+          // skip invalid candidates
         }
       }
     }
@@ -133,12 +156,29 @@ export function useWebRTC(matchId, userId, isInitiator) {
         }
 
         pc.onconnectionstatechange = () => {
-          if (!cancelled) setConnectionState(pc.connectionState)
+          if (cancelled) return
+          const state = pc.connectionState
+          setConnectionState(state)
+          if (state === 'connected' && timeoutId) {
+            clearTimeout(timeoutId)
+            timeoutId = null
+          }
         }
 
         pc.oniceconnectionstatechange = () => {
-          if (pc.iceConnectionState === 'failed') pc.restartIce()
+          if (pc.iceConnectionState === 'failed') {
+            pc.restartIce()
+          }
         }
+
+        timeoutId = setTimeout(() => {
+          if (!cancelled && pcRef.current) {
+            const state = pcRef.current.connectionState
+            if (state !== 'connected') {
+              setConnectionState('failed')
+            }
+          }
+        }, CONNECTION_TIMEOUT)
 
         matchChannel = supabase
           .channel(`match-sig-${matchId}`)
@@ -149,19 +189,19 @@ export function useWebRTC(matchId, userId, isInitiator) {
             filter: `id=eq.${matchId}`,
           }, async (payload) => {
             if (cancelled || !pcRef.current) return
-            const pc = pcRef.current
+            const currentPc = pcRef.current
             const { offer, answer } = payload.new
 
             if (offer && !isInitiator) {
               try {
-                await pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(offer)))
-                const ans = await pc.createAnswer()
-                await pc.setLocalDescription(ans)
+                await currentPc.setRemoteDescription(new RTCSessionDescription(JSON.parse(offer)))
+                const ans = await currentPc.createAnswer()
+                await currentPc.setLocalDescription(ans)
                 await supabase
                   .from('active_matches')
                   .update({ answer: JSON.stringify(ans) })
                   .eq('id', matchId)
-                await processCandidateQueue(pc)
+                await processCandidateQueue(currentPc)
               } catch (e) {
                 console.error('Offer handling error:', e)
               }
@@ -169,8 +209,8 @@ export function useWebRTC(matchId, userId, isInitiator) {
 
             if (answer && isInitiator) {
               try {
-                await pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(answer)))
-                await processCandidateQueue(pc)
+                await currentPc.setRemoteDescription(new RTCSessionDescription(JSON.parse(answer)))
+                await processCandidateQueue(currentPc)
               } catch (e) {
                 console.error('Answer handling error:', e)
               }
@@ -193,7 +233,7 @@ export function useWebRTC(matchId, userId, isInitiator) {
               try {
                 await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate))
               } catch (e) {
-                console.error('ICE add error:', e)
+                // skip invalid candidates
               }
             } else {
               candidateQueue.current.push(candidate)
@@ -246,6 +286,7 @@ export function useWebRTC(matchId, userId, isInitiator) {
         }
       } catch (err) {
         console.error('WebRTC setup error:', err)
+        if (!cancelled) setConnectionState('failed')
       }
     }
 
@@ -253,6 +294,7 @@ export function useWebRTC(matchId, userId, isInitiator) {
 
     return () => {
       cancelled = true
+      if (timeoutId) clearTimeout(timeoutId)
       destroyPeerConnection()
       if (matchChannel) supabase.removeChannel(matchChannel)
       if (iceChannel) supabase.removeChannel(iceChannel)
